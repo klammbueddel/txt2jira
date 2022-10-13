@@ -1,0 +1,13 @@
+---
+version: '2'
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: ./.docker/Dockerfile
+      args:
+        - WITH_XDEBUG=true
+    volumes:
+      - .:/home:delegated
