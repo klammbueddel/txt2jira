@@ -34,7 +34,7 @@ class InitCommand extends Command
         $io = $this->app()->io();
 
         if (!$host || $change) {
-            $host = $io->prompt('Enter Jira host', $host ?? 'https://mycompany.atlassian.net');
+            $host = $io->prompt('Enter Jira host', $host ?? 'mycompany.atlassian.net');
         }
         if (!$user || $change) {
             $user = $io->prompt('Enter Jira user', $user);
