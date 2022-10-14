@@ -30,7 +30,7 @@ class Item
      */
     public function getIssue(): ?string
     {
-        if (preg_match('/^([A-Z]{2,}-[0-9]+) (.*)/', $this->issue, $matches)) {
+        if (preg_match('/^([A-Z]{2,}-[0-9]+) (.*)/', $this->issue ?? '', $matches)) {
             return $matches[1];
         }
 
