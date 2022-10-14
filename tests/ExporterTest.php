@@ -10,6 +10,20 @@ use PHPUnit\Framework\TestCase;
 
 final class ExporterTest extends TestCase
 {
+
+    /** @test */
+    public function should_perform_real_export()
+    {
+        $this->markTestSkipped('do not skip to test real export');
+
+        $importer = new Importer();
+        $days = $importer->import('log.txt');
+        $config = json_decode(file_get_contents(__DIR__."/../config.json"), true);
+        $exporter = new Exporter(new JiraClient($config), new Interactor());
+        $logs = $exporter->prepare($days);
+        $exporter->export($logs);
+    }
+
     /** @test */
     public function should_aggregate_times()
     {
