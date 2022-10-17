@@ -194,6 +194,8 @@ Use this as a template for your work day
 
 ```
 
+## [Changelog](CHANGELOG.md)
+
 ## License
 
 MIT 2022 Christian Bartels
