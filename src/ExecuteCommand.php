@@ -18,28 +18,20 @@ class ExecuteCommand extends Command
             ->argument('file', 'path to your log file')
             ->option('-a --all', 'Show all')
             ->option('-d|--days [days]', 'Show last x days', 'intval', 5);
-
-        if (file_exists(__DIR__ ."/../config.json")) {
-            $config = json_decode(file_get_contents(__DIR__ ."/../config.json"), true);
-
-            $this->set('host', $config['host'] ?? null);
-            $this->set('user', $config['user'] ?? null);
-            $this->set('token', $config['token'] ?? null);
-        }
     }
 
     public function execute($file, $all, $days)
     {
         $interactor = $this->app()->io();
-        if (file_exists(__DIR__ ."/../config.json")) {
-            $config = json_decode(file_get_contents(__DIR__ ."/../config.json"), true);
-        } else {
-            $interactor->greenBold('Please setup configuration with `txt2jira init`', true);
+        try {
+            $config = new Config();
+        } catch (RuntimeException $ex) {
+            $interactor->warn('Please setup configuration with `txt2jira init`', true);
 
             return 1;
         }
 
-        $path = $file ?? $config['file'];
+        $path = $file ?? $config->file;
 
         $import = new Importer();
         if (!file_exists($path)) {

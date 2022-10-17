@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 
+use App\Config;
 use App\ExecuteCommand;
 use App\InitCommand;
 
@@ -9,7 +10,7 @@ require __DIR__.'/vendor/autoload.php';
 try {
 
     $app = new Ahc\Cli\Application('txt2jira', 'v1.0.0');
-    $app->add(new InitCommand(), 'i');
+    $app->add(new InitCommand(new Config()), 'i');
     $app->add(new ExecuteCommand(), 'c');
     $app->handle($_SERVER['argv']);
 

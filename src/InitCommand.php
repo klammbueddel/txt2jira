@@ -4,11 +4,12 @@ namespace App;
 
 use Ahc\Cli\Input\Command;
 use Ahc\Cli\Output\Color;
+use RuntimeException;
 
 class InitCommand extends Command
 {
 
-    public function __construct()
+    public function __construct(private readonly Config $config)
     {
         parent::__construct('init', 'Setup configuration');
 
@@ -19,14 +20,10 @@ class InitCommand extends Command
             ->option('-t --token', 'Jira token')
             ->option('-f --file', 'Log file');
 
-        if (file_exists(__DIR__ ."/../config.json")) {
-            $config = json_decode(file_get_contents(__DIR__ ."/../config.json"), true);
-
-            $this->set('host', $config['host'] ?? null);
-            $this->set('user', $config['user'] ?? null);
-            $this->set('token', $config['token'] ?? null);
-            $this->set('file', $config['file'] ?? null);
-        }
+        $this->set('host', $this->config->host ?? null);
+        $this->set('user', $this->config->user ?? null);
+        $this->set('token', $this->config->token ?? null);
+        $this->set('file', $this->config->file ?? null);
     }
 
     public function execute($host, $user, $token, $file, $change)
@@ -52,14 +49,43 @@ class InitCommand extends Command
         $io->write('Token '.$color->ok($token), true);
         $io->write('File  '.$color->ok($file), true);
 
-        file_put_contents(
-            __DIR__ ."/../config.json",
-            json_encode([
-                'host' => $host,
-                'user' => $user,
-                'token' => $token,
-                'file' => $file,
-            ])
-        );
+        $color = new Color();
+        $client = new JiraClient($this->config);
+        try {
+            $io->write($color->comment('Verify configuration...'), true);
+            $client->getCurrentUser();
+
+            if (!file_exists($file)) {
+                throw new RuntimeException("$file not found");
+            }
+
+            $io->write($color->ok('Configuration verified ✓'), true);
+            $this->config->save();
+        } catch (\Exception $ex) {
+            $io->write($color->error('❌ '.$ex->getMessage()), true);
+
+            $action =
+                $io->choice(
+                    'What next?',
+                    [
+                        's' => 'Save configuration',
+                        'e' => 'Edit configuration',
+                        'q' => 'Quit without saving',
+                    ],
+                    'e'
+                );
+            switch ($action) {
+                case 's':
+                    $this->config->host = $host;
+                    $this->config->user = $user;
+                    $this->config->token = $token;
+                    $this->config->file = $file;
+                    $this->config->save();
+                    break;
+                case 'e':
+                    $this->execute($host, $user, $token, $file, $change);;
+                    break;
+            }
+        }
     }
 }

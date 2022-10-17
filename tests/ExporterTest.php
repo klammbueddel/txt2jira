@@ -2,6 +2,8 @@
 
 namespace App\Tests;
 
+use Ahc\Cli\IO\Interactor;
+use App\Config;
 use App\Exporter;
 use App\Importer;
 use App\Item;
@@ -18,8 +20,7 @@ final class ExporterTest extends TestCase
 
         $importer = new Importer();
         $days = $importer->import('log.txt');
-        $config = json_decode(file_get_contents(__DIR__."/../config.json"), true);
-        $exporter = new Exporter(new JiraClient($config), new Interactor());
+        $exporter = new Exporter(new JiraClient(new Config()), new Interactor());
         $logs = $exporter->prepare($days);
         $exporter->export($logs);
     }
