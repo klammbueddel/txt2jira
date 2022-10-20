@@ -83,7 +83,7 @@ class InitCommand extends Command
                     $this->config->save();
                     break;
                 case 'e':
-                    $this->execute($host, $user, $token, $file, $change);;
+                    $this->execute($host, $user, $token, $file, true);;
                     break;
             }
         }
