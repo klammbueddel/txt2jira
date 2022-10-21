@@ -4,6 +4,7 @@ namespace App;
 
 use Ahc\Cli\IO\Interactor;
 use DateTime;
+use Exception;
 
 class Exporter
 {
@@ -18,13 +19,17 @@ class Exporter
                     'Log '.self::formatJiraTime($log['minutes'] * 60).' '.$log['issue'].' '.$log['comment']
                 );
 
-                $this->client->addWorkLog($log['issue'], $log['comment'], $log['date'], $log['minutes']);
+                try {
+                    $this->client->addWorkLog($log['issue'], $log['comment'], $log['date'], $log['minutes']);
+                    $this->interactor->greenBold(' ✓', true);
 
-                $this->interactor->greenBold(' ✓', true);
-
-                foreach ($log['items'] as $item) {
-                    $item->markDone();
+                    foreach ($log['items'] as $item) {
+                        $item->markDone();
+                    }
+                } catch (Exception $ex) {
+                    $this->interactor->error(' ❌ '.$ex->getMessage(), true);
                 }
+
             }
         }
     }
