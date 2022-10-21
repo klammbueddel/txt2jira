@@ -26,6 +26,14 @@ class InitCommand extends Command
         $this->set('file', $this->config->file ?? null);
     }
 
+    private function save($host, $user, $token, $file) {
+        $this->config->host = $host;
+        $this->config->user = $user;
+        $this->config->token = $token;
+        $this->config->file = $file;
+        $this->config->save();
+    }
+
     public function execute($host, $user, $token, $file, $change)
     {
         $io = $this->app()->io();
@@ -60,7 +68,7 @@ class InitCommand extends Command
             }
 
             $io->write($color->ok('Configuration verified ✓'), true);
-            $this->config->save();
+            $this->save($host, $user, $token, $file);
         } catch (\Exception $ex) {
             $io->write($color->error('❌ '.$ex->getMessage()), true);
 
@@ -76,11 +84,7 @@ class InitCommand extends Command
                 );
             switch ($action) {
                 case 's':
-                    $this->config->host = $host;
-                    $this->config->user = $user;
-                    $this->config->token = $token;
-                    $this->config->file = $file;
-                    $this->config->save();
+                    $this->save($host, $user, $token, $file);
                     break;
                 case 'e':
                     $this->execute($host, $user, $token, $file, true);;
