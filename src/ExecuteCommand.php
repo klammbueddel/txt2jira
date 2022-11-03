@@ -3,8 +3,6 @@
 namespace App;
 
 use Ahc\Cli\Input\Command;
-use Ahc\Cli\IO\Interactor;
-use Ahc\Cli\Output\Color;
 use RuntimeException;
 
 class ExecuteCommand extends Command

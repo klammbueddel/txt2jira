@@ -39,7 +39,7 @@ class InitCommand extends Command
         $io = $this->app()->io();
 
         if (!$host || $change) {
-            $host = $io->prompt('Enter Jira host', $host ?? 'mycompany.atlassian.net');
+            $host = $io->prompt('Enter Jira host', $host ?: 'mycompany.atlassian.net');
         }
         if (!$user || $change) {
             $user = $io->prompt('Enter Jira user', $user);
@@ -48,7 +48,7 @@ class InitCommand extends Command
             $token = $io->prompt('Enter Jira api token (https://id.atlassian.com/manage/api-tokens)', $token);
         }
         if (!$file || $change) {
-            $file = $io->prompt('Enter path to log file', $file ?? 'log.txt');
+            $file = $io->prompt('Enter path to log file', $file ?: 'log.txt');
         }
 
         $color = new Color();
@@ -58,6 +58,7 @@ class InitCommand extends Command
         $io->write('File  '.$color->ok($file), true);
 
         $color = new Color();
+        $this->save($host, $user, $token, $file);
         $client = new JiraClient($this->config);
         try {
             $io->write($color->comment('Verify configuration...'), true);
@@ -68,7 +69,6 @@ class InitCommand extends Command
             }
 
             $io->write($color->ok('Configuration verified ✓'), true);
-            $this->save($host, $user, $token, $file);
         } catch (\Exception $ex) {
             $io->write($color->error('❌ '.$ex->getMessage()), true);
 
@@ -76,16 +76,12 @@ class InitCommand extends Command
                 $io->choice(
                     'What next?',
                     [
-                        's' => 'Save configuration',
                         'e' => 'Edit configuration',
-                        'q' => 'Quit without saving',
+                        'q' => 'Quit',
                     ],
                     'e'
                 );
             switch ($action) {
-                case 's':
-                    $this->save($host, $user, $token, $file);
-                    break;
                 case 'e':
                     $this->execute($host, $user, $token, $file, true);;
                     break;

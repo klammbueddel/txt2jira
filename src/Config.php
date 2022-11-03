@@ -2,15 +2,14 @@
 
 namespace App;
 
-use RuntimeException;
 
 class Config
 {
 
-    public string $host;
-    public string $user;
-    public string $token;
-    public string $file;
+    public string $host = '';
+    public string $user = '';
+    public string $token = '';
+    public string $file = '';
 
     public function __construct(private readonly string $configFile = __DIR__."/../config.json")
     {
@@ -33,7 +32,7 @@ class Config
     public function load(): void
     {
         if (!file_exists($this->configFile)) {
-            throw new RuntimeException("config file $this->configFile not found");
+            return;
         }
 
         $config = json_decode(file_get_contents($this->configFile), true);
