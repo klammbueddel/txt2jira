@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2022-11-03
+### Fixed
+- Fixed initial setup
 ## [1.0.3] - 2022-10-21
 ### Added
 - Handle exception during export - thx to [@deeaitsch84](https://github.com/deeaitsch84) for feedback
