@@ -105,6 +105,29 @@ TEXT
     }
 
     /** @test */
+    public function should_ignore_invalid_date()
+    {
+        $importer = new Importer();
+        $days = $importer->parse(
+            $in =
+                <<<TEXT
+00.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+08:00
+TEST-10 Some content
+08:30
+
+
+TEXT
+        );
+
+        $exporter = new Exporter(null, null);
+        $logs = $exporter->prepare($days);
+
+        $this->assertCount(0, $logs);
+    }
+
+    /** @test */
     public function should_remove_duplicates()
     {
         $item = new Item(null, ['Review', 'Review, Testing'], '08:00', '09:00');

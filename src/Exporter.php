@@ -71,7 +71,7 @@ class Exporter
                     $allComments[] = $item->getComment();
                     $alias = $item->getAlias();
                 }
-                if ($minutes > 0 || !$filterOpen) {
+                if (($minutes > 0 || !$filterOpen) && $this->validateDate($date)) {
                     $result[] = [
                         'date' => new DateTime($date.' '.$start),
                         'issue' => $issue,
@@ -101,6 +101,18 @@ class Exporter
         }
 
         return implode(', ', array_unique($explode));
+    }
+
+    /**
+     * Returns true if $date is a valid date in the format "d.m.Y".
+     *
+     * @param $date
+     * @param $format
+     * @return bool
+     */
+    public function validateDate($date, $format = 'd.m.Y'){
+        $d = DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) === $date;
     }
 
     public static function formatJiraTime(int $s, $strPad = 7)
