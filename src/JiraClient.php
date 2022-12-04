@@ -26,6 +26,11 @@ class JiraClient
         return $ch;
     }
 
+    /**
+     * @param $ch
+     * @return bool|string
+     * @throws HttpException
+     */
     private function request($ch)
     {
         $response = curl_exec($ch);
@@ -36,12 +41,17 @@ class JiraClient
         }
 
         if ($info['http_code'] >= 400) {
-            throw new Exception('HTTP '.$info['http_code'].': '.$response);
+            throw new HttpException($response, $info['http_code']);
         }
 
         return $response;
     }
 
+    /**
+     * @param $url
+     * @return bool|string
+     * @throws HttpException
+     */
     private function get($url)
     {
         return $this->request($this->prepare($url));
@@ -75,6 +85,39 @@ class JiraClient
                 "timeSpent" => $timeSpent,
             ]
         );
+    }
+
+    /**
+     * @param array $issues
+     * @param $fields
+     * @return mixed
+     * @throws HttpException
+     */
+    public function getIssues(array $issues, $fields = ['summary'])
+    {
+        $jql = "key=".implode(" or key=", $issues);
+
+        $response = json_decode($this->getByJql($jql, $fields), true);
+        return $response['issues'];
+    }
+
+    /**
+     * @param $jql
+     * @param array $fields
+     * @param $offset
+     * @param $limit
+     * @return bool|string
+     * @throws HttpException
+     */
+    public function getByJql($jql, array $fields = [], $offset = 0, $limit = 1000)
+    {
+        $url = '/rest/api/2/search'
+            .'?fields='.implode(',', $fields)
+            .'&jql='.urlencode($jql)
+            .'&maxResults='.$limit
+            .'&startAt='.$offset;
+
+        return $this->get($url);
     }
 
     public function getCurrentUser()

@@ -1,8 +1,7 @@
 {
   "require": {
     "phpunit/phpunit": "^9.5",
-    "jfcherng/php-diff": "^6.12",
-    "adhocore/cli": "^1.2"
+    "symfony/console": "^6.1"
   },
   "autoload": {
     "psr-4": {
@@ -13,5 +12,8 @@
     "psr-4": {
       "App\\Tests\\": "tests/"
     }
+  },
+  "require-dev": {
+    "slope-it/clock-mock": "^0.3.4"
   }
 }

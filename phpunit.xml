@@ -10,6 +10,11 @@
          stopOnFailure="false"
          bootstrap="tests/bootstrap.php"
 >
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
     <testsuites>
         <testsuite name="Test Suite">
             <directory>tests</directory>

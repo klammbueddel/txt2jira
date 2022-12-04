@@ -2,18 +2,21 @@
 
 namespace App;
 
+use DateInterval;
 use DateTime;
 
 class Item
 {
 
     private $done = false;
+    private $standalone = false;
 
     public function __construct(
         private ?string $issue,
         private array $comments,
         private string $start,
         private string $end,
+        private array $children = [],
     ) {
         foreach ($this->comments as $idx => $comment) {
             if (preg_match('/(.*) x[\\s]*$/', $comment, $matches)) {
@@ -52,6 +55,13 @@ class Item
     public function markDone()
     {
         $this->done = true;
+        return $this;
+    }
+
+    public function markStandalone()
+    {
+        $this->standalone = true;
+        return $this;
     }
 
     /**
@@ -79,6 +89,14 @@ class Item
     }
 
     /**
+     * @return bool
+     */
+    public function isStandalone(): bool
+    {
+        return $this->standalone;
+    }
+
+    /**
      * @return string
      */
     public function getComment(): ?string
@@ -86,11 +104,42 @@ class Item
         return Exporter::sanitizeComments($this->comments);
     }
 
+    public static function getEndTime($start, $minutes): string
+    {
+        $date = new DateTime($start);
+        $date->add(new DateInterval('PT' . $minutes . 'M'));
+        return $date->format('H:i');
+    }
+
     public function getMinutes(): int
     {
         return round(
-            ((new DateTime($this->end))->getTimestamp()
-                - (new DateTime($this->start))->getTimestamp()) / 60
-        );
+                ((new DateTime($this->end))->getTimestamp()
+                    - (new DateTime($this->start))->getTimestamp()) / 60
+            ) - $this->getMinutesOfChildren();
+    }
+
+    public function addChild(Item $item)
+    {
+        $this->children[] = $item;
+        return $this;
+    }
+
+    public function getMinutesOfChildren()
+    {
+        $result = 0;
+        foreach ($this->children as $child) {
+            $result += $child->getMinutes();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array
+     */
+    public function getChildren(): array
+    {
+        return $this->children;
     }
 }

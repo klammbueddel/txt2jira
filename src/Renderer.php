@@ -2,36 +2,22 @@
 
 namespace App;
 
+use DateTime;
+use Symfony\Component\Console\Color;
+
 class Renderer
 {
+    const SUMMARY_WIDTH = 50;
+    const ISSUE_WIDTH = 10;
 
-    public function __construct() { }
+    public function __construct(private readonly ?Importer $importer = null) { }
 
-    public function render(array $logs, $days): string
+    public function renderLog($log, $breaks, $isLast)
     {
-        $lines = [];
-
-        $lastDay = null;
-        $total = 0;
-        foreach ($logs as $log) {
-
-            # sum row
-            if ($lastDay && $lastDay !== $log['date']->format('d.m.y')) {
-                $this->renderSum($lines, $total);
-                $total = 0;
-            }
-
-            # date headline
-            if (!$lastDay || $lastDay !== $log['date']->format('d.m.y')) {
-                if ($days-- <= 0) {
-                    break;
-                }
-                $lines[] = "------------------------------------ "
-                    .$this->colorize($log['date']->format('d.m.y'), 'Yellow')
-                    ." ------------------------------------";
-            }
-
-            # state column
+        # state column
+        if ($log['transient']) {
+            $line = '⏵ ';
+        } else {
             if ($log['minutes'] > 0) {
                 if ($log['minutes'] != $log['total']) {
                     $line = '~ ';
@@ -41,58 +27,133 @@ class Renderer
             } else {
                 $line = '  ';
             }
+        }
 
-            $line .= (str_pad(trim($log['alias'], '_'), 10, ' ') ?: '?????????').' '.Exporter::formatJiraTime(
-                    $log['total'] * 60
-                ).' '.str_pad($log['allComments'], 80, ' ');
+        $issue = $log['issues'][0];
 
-            if ($log['minutes'] > 0 && $log['minutes'] !== $log['total']) {
-                $line .= '* +'.Exporter::formatJiraTime($log['minutes'] * 60).' '.$log['comment']."";
+        $line = $line.$this->getTime($log, $breaks, $isLast)
+            .'  '.$this->getSummary($issue)
+            .'  '.$this->minutes($log)
+            .' '.str_pad($log['comment'], 35, ' ');
+
+        return $log['transient'] ? self::colorize($line, 'bright-green') : $line;
+    }
+
+    public function render(array $logs, $breaks = false): string
+    {
+        if (! $logs) {
+            return ' --- list is empty --- ';
+        }
+        $lines = [];
+
+        $lastLog = null;
+        $total = 0;
+        foreach ($logs as $idx => $log) {
+            $isLast = $idx === count($logs) - 1;
+
+            # sum row
+            if ($lastLog && $lastLog['date']->format('d.m.y') !== $log['date']->format('d.m.y')) {
+                $this->renderSum($lines, $total);
+                $total = 0;
             }
-            $lines[] = $line;
+
+            # date headline
+            if (!$lastLog || $lastLog['date']->format('d.m.y') !== $log['date']->format('d.m.y')) {
+                $newDay = true;
+                $lines[] = "-------------------------------------------------- "
+                    .$this->colorize($log['date']->format('d.m.y'), 'bright-yellow')
+                    ." -----------------------------------------------------";
+            } else {
+                $newDay = false;
+            }
+
+            # render break
+            if ($breaks && !$newDay && $lastLog && $lastLog['end'] != $log['date']) {
+                $break = str_pad('', 7, ' ')
+                    .Exporter::formatJiraTime($log['date']->getTimestamp() - $lastLog['end']->getTimestamp());
+                $lines[] = self::colorize($break, 'yellow');
+            }
+
+            $lines[] = $this->renderLog($log, $breaks, $isLast);
+
             $total += $log['total'] * 60;
-            $lastDay = $log['date']->format('d.m.y');
+            $lastLog = $log;
         }
 
-        if ($days > 0) {
-            $this->renderSum($lines, $total);
+        # render current break
+        if ($breaks && $lastLog && $lastLog['end'] && $lastLog['date']->format('d.m.y') === (new DateTime())->format(
+                'd.m.y'
+            ) && $log && !$log['transient']) {
+            $seconds = (new DateTime())->getTimestamp() - $lastLog['end']->getTimestamp();
+            if ($seconds > 60) {
+                $break = str_pad('', 7, ' ')
+                    .Exporter::formatJiraTime((new DateTime())->getTimestamp() - $lastLog['end']->getTimestamp());
+                $lines[] = self::colorize($break, 'yellow');
+            }
         }
+
+        $this->renderSum($lines, $total);
 
         return implode("\n", $lines);
     }
 
-    private static $colors = [
-        'Black' => '0;30',
-        'Dark Gray' => '1;30',
-        'Red' => '0;31',
-        'Light Red' => '1;31',
-        'Green' => '0;32',
-        'Light Green' => '1;32',
-        'Brown/Orange' => '0;33',
-        'Yellow' => '1;33',
-        'Blue' => '0;34',
-        'Light Blue' => '1;34',
-        'Purple' => '0;35',
-        'Light Purple' => '1;35',
-        'Cyan' => '0;36',
-        'Light Cyan' => '1;36',
-        'Light Gray' => '0;37',
-        'White' => '1;37',
-    ];
-
     private function colorize($value, $color)
     {
-        $code = self::$colors[$color];
-
-        return "\033[{$code}m$value\033[0m";
+        return (new Color($color))->apply($value);
     }
 
     private function renderSum(&$lines, $total)
     {
         $lines[] =
-            "-------------------------------------- "
-            .str_pad($this->colorize(Exporter::formatJiraTime($total, 0), 'Green') . ' ', 54, '-');
+            "----------------------------------------------------- "
+            .str_pad($this->colorize(Exporter::formatJiraTime($total, 0), 'green').' ', 69, '-');
         $lines[] = '';
+    }
+
+    /**
+     * @param mixed $issue
+     * @return string
+     */
+    private function getSummary(mixed $issue): string
+    {
+        $summary = $this->importer?->getSummary($issue->issue) ?:
+            ($issue->alias !== $issue->issue ? $issue->alias : '');
+
+        if ($summary && strlen($summary) > self::SUMMARY_WIDTH) {
+            $summary = substr($summary, 0, self::SUMMARY_WIDTH - 3).'...';
+        }
+
+        $summary =
+            str_pad($issue->issue, self::ISSUE_WIDTH, ' ')
+            .' '.str_pad($summary, self::SUMMARY_WIDTH, ' ').' ';
+
+        return $summary;
+    }
+
+    /**
+     * @param $log
+     * @param $breaks
+     * @param $isLast
+     * @return string
+     */
+    private function getTime($log, $breaks, $isLast): string
+    {
+        $end = $log['end']->format('H:i');
+
+        if ($breaks && $isLast && !$log['transient']) {
+            $end = self::colorize($end, 'cyan');
+        }
+
+        return $log['date']->format('H:i').' - '.$end;
+    }
+
+    /**
+     * @param $log
+     * @return string
+     */
+    private function minutes($log): string
+    {
+        return Exporter::formatJiraTime(($log['total'] ?: $log['minutes']) * 60);
     }
 
 }

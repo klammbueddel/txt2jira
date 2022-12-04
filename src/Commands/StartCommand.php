@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Commands;
+
+use App\Controller;
+use App\Model\Alias;
+use App\Model\Log;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class StartCommand extends AbstractCommand
+{
+    public function __construct()
+    {
+        parent::__construct('start');
+        $this->setDescription('Starts / stops a log');
+
+        $this->addArgument('issue', InputArgument::IS_ARRAY, 'Name of the issue');
+        $this->addOption('time', 't', InputOption::VALUE_OPTIONAL, 'Alternative start time');
+    }
+
+    public function exec(Controller $controller, InputInterface $input, OutputInterface $output): int
+    {
+        $logs = $controller->logs();
+
+        $args = $input->getArgument('issue');
+        $time = $input->getOption('time');
+
+        $issue = array_shift($args);
+
+        if ($issue && preg_match('/([A-Z]{2,}-[0-9]+)/', $issue, $matches)) {
+            $issue = $matches[1];
+        }
+
+        $comments = join(' ', $args);
+
+        $transientLogs = array_values(
+            array_filter($logs, function (Log $log) {
+                return $log->transient;
+            })
+        );
+
+        if ($transientLogs) {
+            if ($issue && $transientLogs[0]?->issues[0]?->alias === $issue) {
+                $output->writeln('Running since ' . $transientLogs[0]->start->format('H:i'));
+            } else {
+                $controller->stop($time);
+
+                if ($issue) {
+                    $controller->start($issue, $comments, $time);
+                }
+            }
+
+        } else {
+            $controller->start($issue, $comments, $time);
+        }
+
+        return 0;
+    }
+}

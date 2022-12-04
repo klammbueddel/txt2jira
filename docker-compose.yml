@@ -1,5 +1,5 @@
 ---
-version: '2'
+version: '3'
 
 services:
 
@@ -10,4 +10,4 @@ services:
       args:
         - WITH_XDEBUG=true
     volumes:
-      - .:/home:delegated
+      - .:/home

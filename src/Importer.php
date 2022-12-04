@@ -2,186 +2,76 @@
 
 namespace App;
 
-use Exception;
-use Jfcherng\Diff\DiffHelper;
-
 class Importer
 {
+    private $cache;
 
-    private array $aliases = [];
-
-    public function getAliases(): array
-    {
-        return $this->aliases;
+    public function __construct(
+        private readonly JiraClient $client,
+        private readonly Config $config,
+    ) {
+        if (file_exists($this->config->getJiraCache())) {
+            $this->cache = json_decode(file_get_contents($this->config->getJiraCache()), true) ?: [];
+        } else {
+            $this->cache = [];
+        }
     }
 
-    /**
-     * @param $file
-     * @return array
-     * @throws Exception
-     */
-    function import($file): array
+    public function update(array $keys)
     {
-        return $this->parse(file_get_contents($file));
-    }
-
-    function export($file, $days): void
-    {
-        file_put_contents($file, $this->render($days));
-    }
-
-    private function collectAlias($line): bool
-    {
-        if (preg_match('/^([A-Z]{2,}-[0-9]+)(.*)/', $line, $matches)) {
-            $issue = $matches[1];
-
-            $possibleAlias = $matches[2];
-            if (preg_match('/^ as ([_\w]+)/', $possibleAlias, $matches)) {
-                $this->aliases[$matches[1]] = $issue;
-
-                return true;
-            }
+        if (!$keys) {
+            return;
         }
 
-        return false;
-    }
+        $keys = array_map('strtoupper', $keys);
+        try {
+            $issues = $this->client->getIssues($keys);
+        } catch (HttpException $ex) {
+            $json = json_decode($ex->getMessage(), true);
+            $error = $json['errorMessages'][0] ?? $ex->getMessage();
 
-    /**
-     * @throws Exception
-     */
-    function parse($content): array
-    {
-        $content = str_replace("\r\n", "\n", $content);
-        $lines = explode("\n", $content);
+            // Jira error if issue is invalid {"errorMessages":["The issue key 'FOO' for field 'key' is invalid."],"warningMessages":[]}
+            if (preg_match('/.*The issue key \'(.*)\' for field \'key\' is invalid.*/', $error, $matches)) {
 
-        $result = [];
+                $this->cache[$matches[1]] = [];
+                $this->saveCache();
 
-        $date = null;
-        $time = null;
-        $lastTime = null;
-        $issue = null;
-        $comments = [];
-        $collectAliases = true;
+                $keys = array_diff($keys, [$matches[1]]);
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-
-            if ($collectAliases && $this->collectAlias($line)) {
-                continue;
-            }
-
-            if (preg_match('/^([0-9]{2}\.[0-9]{2}\.[0-9]{4}).*/', $line, $matches)) {
-                $date = $matches[1];
-                $lastTime = null;
-                $time = null;
-                $comments = [];
-                continue;
-            }
-
-            $resolvedAlias = false;
-            foreach ($this->aliases as $alias => $resolveTo) {
-                if (str_starts_with($line, $alias)) {
-                    $issue = $resolveTo." ( $alias )";
-                    $comments = [substr($line, strlen($alias))];
-                    $resolvedAlias = true;
-                    break;
-                }
-            }
-            if ($resolvedAlias) {
-                continue;
-            }
-
-            # matches issue
-            if (preg_match('/^([A-Z]{2,}-[0-9]+)(.*)/', $line, $matches)) {
-                $issue = $matches[1];
-                $comments = [$matches[2]];
-                continue;
-            }
-
-            # matches empty line (pause)
-            if (!trim($line)) {
-                $time = null;
-                if ($lastTime) {
-                    $comments[] = '';
-                }
-                continue;
-            }
-
-            # matches time
-            if (preg_match('/^([0-9]{2}:[0-9]{2}).*/', $line, $matches)) {
-                $collectAliases = false;
-                $time = $matches[1];
-                if ($lastTime) {
-                    $result[$date][] = new Item($issue, $comments, $lastTime, $time);
-                    $comments = [];
-                    $issue = null;
-                }
+                return $this->update($keys);
             } else {
-                $comments[] = $line;
-                $issue = null;
+                throw $ex;
             }
-
-            if ($time) {
-                $lastTime = $time;
-            }
-
         }
 
-        return $result;
+        foreach ($issues as $issue) {
+            $this->cache[$issue['key']] = $issue;
+        }
+
+        $this->saveCache();
     }
 
-    /**
-     * @param $in
-     * @return string
-     * @throws Exception
-     */
-    function diff($in): string
+    public function saveCache()
     {
-        $items = $this->parse($in);
-        $out = $this->render($items);
-
-        return DiffHelper::calculate($in, $out, 'Unified', ['ignoreWhitespace' => true]);
+        file_put_contents($this->config->getJiraCache(), json_encode($this->cache));
     }
 
-    function render($logs): string
+    public function resolveIssue($key)
     {
-
-        $lines = [];
-
-        if ($this->aliases) {
-            foreach ($this->aliases as $alias => $issue) {
-                $lines[] = $issue.' as '.$alias;
-            }
-            $lines[] = '';
+        $key = strtoupper($key);
+        $issue = $this->cache[$key] ?? null;
+        if ($issue === null) {
+            $this->update([$key]);
         }
 
-        foreach ($logs as $date => $items) {
-            $lines[] = $date.' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++';
-            $lines[] = '';
-            $lastEnd = null;
-            foreach ($items as $idx => $item) {
-                if ($idx === 0) {
-                    $lines[] = $item->getStart();
-                } else {
-                    if ($item->getStart() !== $lastEnd) {
-                        $lines[] = '';
-                        $lines[] = $item->getStart();
-                    }
-                }
-                if ($item->getComment() !== null || $item->getAlias()) {
-                    $lines[] = ($item->getAlias() ?: '')
-                        .($item->getComment() ? ' '.$item->getComment() : '')
-                        .($item->isDone() ? ' x' : '');
-                }
-                $lines[] = $item->getEnd();
+        return $this->cache[$key] ?? null;
+    }
 
-                $lastEnd = $item->getEnd();
-            }
-            $lines[] = '';
-            $lines[] = '';
-        }
+    public function getSummary($key)
+    {
+        $issue = $this->resolveIssue($key);
 
-        return implode("\n", $lines);
+        return $issue['fields']['summary'] ?? null;
     }
 
 }

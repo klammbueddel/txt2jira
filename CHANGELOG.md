@@ -1,5 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+
+## [2.0.0] - 2022-12-04
+### Updated
+- Complete rewrite of parser semantics
+### Added
+- Added a various commands to interact with the log file on the command line
+
 ## [1.0.5] - 2022-11-22
 ### Fixed
 - Ignore logs with invalid date - thx to [@deeaitsch84](https://github.com/deeaitsch84) for feedback

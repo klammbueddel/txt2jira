@@ -1,21 +1,22 @@
 #!/usr/bin/env php
 <?php
 
-use App\Config;
-use App\ExecuteCommand;
-use App\InitCommand;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\ListCommand;
 
 require __DIR__.'/vendor/autoload.php';
 
-try {
-
-    $app = new Ahc\Cli\Application('txt2jira', 'v1.0.5');
-    $app->add(new InitCommand(new Config()), 'i');
-    $app->add(new ExecuteCommand(), 'c');
-    $app->handle($_SERVER['argv']);
-
-} catch (Exception $ex) {
-    $interactor = new Ahc\Cli\IO\Interactor();
-    $interactor->redBold($ex->getMessage(), true);
-    exit(1);
-}
+$application = new Application('txt2jira');
+$application->add(new App\Commands\CommentCommand());
+$application->add(new App\Commands\CommitCommand());
+$application->add(new App\Commands\ConfigCommand());
+$application->add(new App\Commands\CurrentCommand());
+$application->add(new App\Commands\DeleteCommand());
+$application->add(new App\Commands\EditCommand());
+$application->add(new App\Commands\IssueCommand());
+$application->add(new App\Commands\ListCommand());
+$application->add(new App\Commands\StartCommand());
+$application->add(new App\Commands\StopCommand());
+$application->add((new ListCommand())->setName('commands'));
+$application->setDefaultCommand('commands');
+$application->run();
