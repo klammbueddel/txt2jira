@@ -1,4 +1,12 @@
 {
+  "name": "klammbueddel/txt2jira",
+  "description": "txt2jira - text to Jira work log – work logging made easy and fun again",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Christian Bartels"
+    }
+  ],
   "require": {
     "phpunit/phpunit": "^9.5",
     "symfony/console": "^6.1"

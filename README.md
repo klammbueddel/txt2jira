@@ -129,6 +129,20 @@ alias wi='txt2jira issue'
 
 ## Other features
 
+### Aliases
+
+Use aliases for recurring tasks.
+
+```TEXT
+TEST-1 as Coffee
+
+14.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+08:00
+Coffee Clean machine
+08:15
+```
+
 ### Comment aggregation
 
 ```TEXT

@@ -3,9 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] - 2022-12-04
 ### Updated
-- Complete rewrite of parser semantics
+- Complete rewrite of parser and interpreter semantics
 ### Added
-- Added a various commands to interact with the log file on the command line
+- Added various commands to interact with the log file on the command line
+- Resolve issue summary from Jira
 
 ## [1.0.5] - 2022-11-22
 ### Fixed
