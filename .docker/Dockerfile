@@ -15,4 +15,8 @@ RUN if [ $WITH_XDEBUG = "true" ] ; then \
         && echo "xdebug.client_host = host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ; \
     fi;
 
+COPY . /home
+
 WORKDIR /home
+
+RUN composer install

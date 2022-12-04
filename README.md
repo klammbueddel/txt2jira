@@ -1,5 +1,7 @@
 # txt2jira - text to Jira work log – work logging made easy and fun again
 
+![CI](https://github.com/klammbueddel/txt2jira/actions/workflows/test.yml/badge.svg)
+
 Log your work in a simple text file and post it to Jira with a single command. 
 Edit the file manually or use the provided commands to interact with the log file.
 
