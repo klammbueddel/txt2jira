@@ -38,8 +38,8 @@ It is easy to switch to another task by just starting it.
 
 ```bash
 09:19 $ ./txt2jira start TEST-2 Do some other work
-Started TEST-2 Do some orther work at 09:20
 Stopped TEST-1 Do some work at 09:20
+Started TEST-2 Do some orther work at 09:20
 ```
 
 ```text
