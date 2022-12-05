@@ -33,15 +33,21 @@ class Importer
             // Jira error if issue is invalid {"errorMessages":["The issue key 'FOO' for field 'key' is invalid."],"warningMessages":[]}
             if (preg_match('/.*The issue key \'(.*)\' for field \'key\' is invalid.*/', $error, $matches)) {
 
-                $this->cache[$matches[1]] = [];
+                $this->cache[$matches[1]] = "The issue key is invalid.";
                 $this->saveCache();
 
                 $keys = array_diff($keys, [$matches[1]]);
 
                 return $this->update($keys);
-            } else {
-                throw $ex;
             }
+
+            if (count($keys) === 1) {
+                $this->cache[$keys[0]] = $error;
+                $this->saveCache();
+                return;
+            }
+
+            throw $ex;
         }
 
         foreach ($issues as $issue) {
@@ -70,6 +76,10 @@ class Importer
     public function getSummary($key)
     {
         $issue = $this->resolveIssue($key);
+
+        if (is_string($issue)) { # error
+            return 'ERROR: ' .$issue;
+        }
 
         return $issue['fields']['summary'] ?? null;
     }

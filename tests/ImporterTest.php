@@ -55,10 +55,24 @@ final class ImporterTest extends TestCase
             ->with(['TEST-1'])
             ->willThrowException(new HttpException('{"errorMessages":["The issue key \'TEST-1\' for field \'key\' is invalid."],"warningMessages":[]}'));
 
-        $this->assertNull($this->createImporter()->getSummary('test-1'));
+        $this->assertEquals('ERROR: The issue key is invalid.', $this->createImporter()->getSummary('test-1'));
 
         # second call should be cached
-        $this->assertNull($this->createImporter()->getSummary('teST-1'));
+        $this->assertEquals('ERROR: The issue key is invalid.', $this->createImporter()->getSummary('test-1'));
+    }
+
+    /** @test */
+    public function should_show_error()
+    {
+        $this->client->expects($this->once())
+            ->method('getIssues')
+            ->with(['TEST-1'])
+            ->willThrowException(new HttpException('{"errorMessages":["Issue does not exist or you do not have permission to see it."],"warningMessages":[]}'));
+
+        $this->assertEquals('ERROR: Issue does not exist or you do not have permission to see it.', $this->createImporter()->getSummary('TEST-1'));
+
+        # second call should be cached
+        $this->assertEquals('ERROR: Issue does not exist or you do not have permission to see it.', $this->createImporter()->getSummary('TEST-1'));
     }
 
 }
