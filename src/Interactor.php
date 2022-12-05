@@ -189,6 +189,7 @@ class Interactor
         }
 
         $choices = $this->combineWithKeys($choices);
+        $choices = array_reverse($choices, true);
 
         $question = new ChoiceQuestion($prompt, $choices, null);
         $question->setValidator(function ($answer) use ($choices) {
