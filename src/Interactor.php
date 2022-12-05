@@ -163,10 +163,10 @@ class Interactor
     public function getIssue(Node $root, $prompt = 'Issue'): ?string
     {
         $issues = $root->getByCriteria(function (Node $node) {
-            return $node instanceof Issue && $node->alias;
+            return $node instanceof Issue && $node->issue;
         });
         $choices = array_map(function (Issue $issue) {
-            return $issue->alias;
+            return $issue->issue;
         }, $issues);
         $choices = array_reverse($choices);
         $choices = array_unique($choices);

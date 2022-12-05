@@ -251,7 +251,7 @@ class Controller
         }, false, true);
 
         $lastIssue = $this->getRoot()->getOneByCriteria(function (Node $node) use ($issue) {
-            return $node instanceof Issue && (!$issue || $node->alias === $issue);
+            return $node instanceof Issue && (!$issue || $node->issue === $issue);
         }, true, true);
 
         if ($comment) {
