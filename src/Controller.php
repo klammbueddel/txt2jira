@@ -228,7 +228,7 @@ class Controller
             return;
         }
 
-        $time = $time ? $this->io->parseTime($time) : $this->io->promptTime('Edit', $lastTime->time);
+        $time = $time ? $this->io->parseTime($time) : $this->io->promptTime('Edit ' . $lastTime->time, $lastTime->time);
         if ($time) {
             $lastTime->time = $time;
             $this->io->info("Set time to $time");
