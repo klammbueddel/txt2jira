@@ -7,6 +7,7 @@ use Symfony\Component\Console\Command\ListCommand;
 require __DIR__.'/vendor/autoload.php';
 
 $application = new Application('txt2jira v2.0.0');
+$application->add(new App\Commands\ClearCacheCommand());
 $application->add(new App\Commands\CommentCommand());
 $application->add(new App\Commands\CommitCommand());
 $application->add(new App\Commands\ConfigCommand());

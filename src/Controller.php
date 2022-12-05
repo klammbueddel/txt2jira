@@ -328,6 +328,15 @@ class Controller
         $this->io->info("Changed comment to {$comment}");
     }
 
+    public function clearCache() {
+        if (file_exists($this->config->getJiraCache())) {
+            unlink($this->config->getJiraCache());
+            $this->io->info('Cache cleared');
+        } else {
+            $this->io->info('Cache is clean');
+        }
+    }
+
     public function today(): ?Day
     {
         $today = $this->getRoot()->getOneByCriteria(function (Node $node) {

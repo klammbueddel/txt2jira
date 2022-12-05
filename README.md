@@ -39,7 +39,7 @@ It is easy to switch to another task by just starting it.
 ```bash
 09:19 $ ./txt2jira start TEST-2 Do some other work
 Stopped TEST-1 Do some work at 09:20
-Started TEST-2 Do some orther work at 09:20
+Started TEST-2 Do some other work at 09:20
 ```
 
 ```text
@@ -77,6 +77,7 @@ TEST-2 Do some other work
 * Use the `comment` command to change or add comments to the current task.
 * Use the `issue` command to change the issue of the current task.
 * Use the `delete` command to remove a task from the log file.
+* Use the `clear-cache` command to clear the cache.
 
 ### Commit logs to Jira
 Once you are done with your work day, you can commit the logs to Jira with the `commit` command.
