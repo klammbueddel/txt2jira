@@ -348,4 +348,206 @@ TEXT,
         );
     }
 
+    /** @test */
+    public function should_edit_start_time_of_current_issue(): void
+    {
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+TEST-1
+TEXT,
+        );
+        $this->controller->editTime('09:45', false);
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:45
+TEST-1
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_edit_start_time_of_current_issue_without_changing_end_time_of_last_one(): void
+    {
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+TEST-1
+TEXT,
+        );
+        $this->controller->editTime('09:45');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+
+09:45
+TEST-1
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_edit_start_time_of_current_issue_if_terminated(): void
+    {
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+TEST-2
+10:00
+TEXT,
+        );
+        $this->controller->editTime('+5', false, true);
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:35
+TEST-2
+10:00
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_edit_start_time_of_current_issue_if_terminated_with_break(): void
+    {
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+TEST-2
+10:00
+TEXT,
+        );
+        $this->controller->editTime('+5', true, true);
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+
+09:35
+TEST-2
+10:00
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_edit_end_time_of_current_issue(): void
+    {
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:25
+TEXT,
+        );
+        $this->controller->editTime('+5');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_edit_time_of_last_day(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-26 00:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+00:25
+TEXT,
+        );
+        $this->controller->editTime('-30');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:55
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_create_new_day(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-26 00:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:55
+TEXT,
+        );
+        $this->controller->editTime('+30');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+00:25
+TEXT,
+            $this->controller->render()
+        );
+    }
+
 }

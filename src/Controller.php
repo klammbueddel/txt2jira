@@ -233,7 +233,26 @@ class Controller
         $this->save();
     }
 
-    public function editTime($time = null)
+    public function editStartTime($time = null, $insertBreak = true)
+    {
+        $lastIssue = $this->getRoot()->getIssue(true, true);
+        while ($sibling = $lastIssue->getSibling(-1)) {
+            if ($sibling instanceof Time) {
+                $startTime = $sibling;
+                break;
+            }
+        }
+
+        if (!$startTime) {
+            $this->io->warn('No start time found');
+
+            return;
+        }
+
+        return $this->editTimeNode($time, $startTime, $insertBreak);
+    }
+
+    public function editTime($time = null, $insertBreak = true, $editStartTime = null)
     {
         $lastTime = $this->getRoot()->getOneByType(Time::class, true, true);
 
@@ -243,15 +262,18 @@ class Controller
             return;
         }
 
-        $time = $time ? $this->io->parseTime($time) : $this->io->promptTime('Edit ' . $lastTime->time, $lastTime->time);
-        if ($time) {
-            $lastTime->time = $time;
-            $this->io->info("Set time to $time");
-        } else {
-            $lastTime->delete();
-            $this->io->info("Deleted ".$lastTime->time);
+        if ($editStartTime) {
+            return $this->editStartTime($time, $insertBreak);
         }
-        $this->save();
+
+        $lastNode = $this->getRoot()->getOneByCriteria(function (Node $node) {
+            return !$node instanceof EmptyLine && !$node instanceof Day;
+        }, true, true);
+        if ($lastNode instanceof Time) {
+            $insertBreak = false;
+        }
+
+        $this->editTimeNode($time, $lastTime, $insertBreak);
     }
 
     public function start($issue = null, $comment = '', $time = null)
@@ -391,8 +413,29 @@ class Controller
     public function roundTime(DateTime $time)
     {
         return $this->io->roundTime($time);
+    }
 
-        return $time;
+    /**
+     * @param mixed $time
+     * @param Node $node
+     * @param mixed $insertBreak
+     * @return void
+     */
+    private function editTimeNode(mixed $time, Node $node, mixed $insertBreak): void
+    {
+        $time =
+            $time ? $this->io->parseTime($time, $node->time) :
+                $this->io->promptTime('Edit '.$node->time, $node->time);
+
+        if ($insertBreak) {
+            $node->insertSibling(new Time($time));
+            $node->insertSibling(new EmptyLine());
+        } else {
+            $node->time = $time;
+        }
+        $this->io->info("Set time to $time");
+
+        $this->save();
     }
 
 }
