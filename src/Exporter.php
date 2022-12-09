@@ -12,7 +12,7 @@ class Exporter
 {
 
     public function __construct(
-        private readonly JiraClient $client,
+        private readonly ?JiraClient $client,
     ) {
     }
 

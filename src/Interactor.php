@@ -6,6 +6,7 @@ use App\Model\Issue;
 use App\Model\Node;
 use DateInterval;
 use DateTime;
+use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\Console\Color;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -22,39 +23,62 @@ class Interactor
         private readonly InputInterface $input,
         private readonly OutputInterface $output,
         private readonly QuestionHelper $questionHelper,
+        private readonly Config $config,
         private readonly ?Importer $importer = null,
     ) {
 
     }
 
-    public function parseTime($time, $default = null)
+    public function parseTime($time, $default = null): string
     {
+        $result = null;
+        $round = false;
+        if (preg_match('/^~(.*)/', $time, $matches)) {
+            $round = true;
+            $time = $matches[1];
+        }
+
         if (preg_match('/^\d+$/', $time)) {
-            return (new DateTime())->format('H').':'.str_pad($time, 2, '0', STR_PAD_LEFT);
+            $result = new DateTime((new DateTime())->format('H').':'.str_pad($time, 2, '0', STR_PAD_LEFT));
         }
 
-        if (preg_match('/^\+(\d+)$/', $time, $matches)) {
-            return (new DateTime($default))->add(new DateInterval('PT'.$matches[1].'M'))->format('H:i');
+        if (! $result && preg_match('/^\+(\d+)$/', $time, $matches)) {
+            $result = (new DateTime($default))->add(new DateInterval('PT'.$matches[1].'M'));
         }
 
-        if (preg_match('/^-(\d+)$/', $time, $matches)) {
-            return (new DateTime($default))->sub(new DateInterval('PT'.$matches[1].'M'))->format('H:i');
+        if (! $result && preg_match('/^[\-_](\d+)$/', $time, $matches)) {
+            $result = (new DateTime($default))->sub(new DateInterval('PT'.$matches[1].'M'));
         }
 
-        if (!preg_match('/^(\d+):(\d+)$/', $time, $matches)) {
-            throw new RuntimeException('Invalid time');
+        if (! $result && !preg_match('/^(\d+):(\d+)$/', $time, $matches)) {
+            throw new InvalidArgumentException('Invalid time');
         }
 
-        return (new DateTime($default))->setTime($matches[1], $matches[2])->format('H:i');
+        if (! $result) {
+            $result = (new DateTime($default))->setTime($matches[1], $matches[2]);
+        }
+
+        if ($round) {
+            $result = $this->roundTime($result);
+        }
+        return $result->format('H:i');
     }
 
-    public function promptTime($prompt, $default = null, $nullAllowed = true)
+    public function roundTime(DateTime $time)
+    {
+        $seconds = $this->config->roundMinutes * 60;
+        $time->setTime($time->format('H'), $time->format('i'), 0);
+        $time->setTimestamp(round($time->getTimestamp() / $seconds) * $seconds);
+
+        return $time;
+    }
+
+    public function promptTime($prompt, $default = null)
     {
         $white = new Color('white');
         $gray = new Color('gray');
         $cyan = new Color('cyan');
 
-        $delete = false;
         $formats = ['h:m', 'm', '+m', '-m'];
         $prompt .= $white->apply(' (').$gray->apply('[').join(
                 $gray->apply(']').'/'.$gray->apply('['),
@@ -63,21 +87,11 @@ class Interactor
 
         $question = new Question($prompt, $default);
 
-        $question->setValidator(function ($time) use ($nullAllowed, &$delete, $default) {
-            if ($time == "d" && $nullAllowed) {
-                $delete = true;
-
-                return null;
-            }
-
+        $question->setValidator(function ($time) use ($default) {
             return $this->parseTime($time, $default);
         });
 
         $time = $this->questionHelper->ask($this->input, $this->output, $question);
-
-        if ($delete) {
-            return null;
-        }
 
         return $time;
     }

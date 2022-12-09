@@ -44,16 +44,18 @@ class Controller
 
     public function setIo(InputInterface $input, OutputInterface $output, QuestionHelper $helper)
     {
-        $this->io = new Interactor($input, $output, $helper, $this->getImporter());
+        $this->io = new Interactor($input, $output, $helper, $this->config, $this->getImporter());
     }
 
     public function __construct(
         private readonly Config $config = new Config(),
         private ?JiraClient $client = null,
     ) {
-        $this->client = $client ?: new JiraClient($this->config);
+        $this->client = $client ?: ($this->config->host ? new JiraClient($this->config) : null);
         $this->exporter = new Exporter($this->client);
-        $this->importer = new Importer($this->client, $this->config);
+        if ($this->client) {
+            $this->importer = new Importer($this->client, $this->config);
+        }
         $this->renderer = new Renderer($this->importer);
         $this->interpreter = new Interpreter();
     }
@@ -383,9 +385,7 @@ class Controller
 
     public function roundTime(DateTime $time)
     {
-        $seconds = $this->config->roundMinutes * 60;
-        $time->setTime($time->format('H'), $time->format('i'), 0);
-        $time->setTimestamp(round($time->getTimestamp() / $seconds) * $seconds);
+        return $this->io->roundTime($time);
 
         return $time;
     }
