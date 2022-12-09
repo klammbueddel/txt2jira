@@ -8,6 +8,7 @@ use App\JiraClient;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ConfigCommand extends Command
@@ -17,15 +18,17 @@ class ConfigCommand extends Command
     {
         parent::__construct('config');
         $this->setDescription('Setup configuration');
+        $this->addOption('file', 'f', InputOption::VALUE_OPTIONAL, 'Config file');
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new Interactor($input, $output, $this->getHelper('question'));
+        $configFile = $input->getOption('file') ?? '~/.txt2jira';
         $config = new Config();
+        $io = new Interactor($input, $output, $this->getHelper('question'), $config);
 
         try {
-            $config->load('~/.txt2jira');
+            $config->load($configFile);
         } catch (RuntimeException $e) {
             $io->writeln('No config file found, creating new one');
         }
