@@ -281,29 +281,34 @@ class Controller
         $this->io->info("Started {$input} at ".$time);
     }
 
-    public function changeIssue()
+    public function changeIssue($issue = null, $comment = null)
     {
-        $issue = $this->io->getIssue($this->getRoot());
+        $issue = $issue ?: $this->io->getIssue($this->getRoot());
 
         if (!$issue) {
             return;
         }
 
-        $lastNode = $this->getRoot()->getOneByCriteria(function (Node $node) {
-            return $node instanceof Issue;
-        }, true, true);
+        $lastIsue = $this->getRoot()->getIssue(true, true);
 
-        if (!$lastNode) {
+        if (!$lastIsue) {
             $this->io->warn('No issue found');
 
             return;
         }
 
-        $from = $lastNode->alias;
-        $lastNode->input = $issue.' '.$lastNode->comment;
+        $from = $lastIsue->alias.' '.$lastIsue->comment;
+        $lastIsue->input = $issue.' '.($comment ?: $lastIsue->comment);
+        $to = $lastIsue->input;
+
+        if ($from === $to) {
+            $this->io->info("Issue is already '$from'");
+
+            return;
+        }
 
         $this->save();
-        $this->io->info("Changed issue from {$from} to {$issue}");
+        $this->io->info("Changed issue from '{$from}' to '{$to}'");
     }
 
     public function comment($append, $comment = null)
