@@ -257,7 +257,7 @@ class Controller
     public function start($issue = null, $comment = '', $time = null)
     {
         $time = $time ? $this->io->parseTime($time) : $this->roundTime(new DateTime())->format('H:i');
-        $issue = $issue ?? $this->io->getIssue($this->getRoot(), "Start at ".$time .': ');
+        $issue = $issue ?? $this->io->getIssue($this->getRoot(), "Start at ".$time.': ');
 
         $today = $this->today();
 
@@ -266,7 +266,7 @@ class Controller
         }, false, true);
 
         $lastIssue = $this->getRoot()->getOneByCriteria(function (Node $node) use ($issue) {
-            return $node instanceof Issue && (!$issue || $node->issue === $issue);
+            return $node instanceof Issue && (!$issue || $node->issue === $issue || $node->alias === $issue);
         }, true, true);
 
         if ($comment) {
@@ -334,21 +334,26 @@ class Controller
 
             return;
         }
+
         $comment = $comment ?: $this->io->promptComment($this->getRoot(), $lastIssue->issue);
         if (!$comment) {
             return;
         }
 
         if ($append) {
-            $comment = (trim($lastIssue->comment) ? '; ' : ' ').$comment;
+            $comment = (trim($lastIssue->comment) ? trim($lastIssue->comment).'; ' : '').$comment;
         }
 
+        $from = $lastIssue->comment;
         $lastIssue->input = $lastIssue->alias.' '.$comment;
+        $to = $comment;
+
         $this->save();
-        $this->io->info("Changed comment to {$comment}");
+        $this->io->info("Changed comment from '{$from}' to '{$to}'");
     }
 
-    public function clearCache() {
+    public function clearCache()
+    {
         if (file_exists($this->config->getJiraCache())) {
             unlink($this->config->getJiraCache());
             $this->io->info('Cache cleared');

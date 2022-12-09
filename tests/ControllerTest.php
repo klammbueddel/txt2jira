@@ -67,6 +67,70 @@ final class ControllerTest extends TestCase
     }
 
     /** @test */
+    public function should_start_with_last_comment(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:00'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1 baa
+09:30
+TEXT,
+        );
+        $this->controller->start('TEST-1');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1 baa
+09:30
+
+10:00
+TEST-1 baa
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_start_with_last_comment_from_alias(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:00'));
+
+        $this->controller->parse(
+            <<<TEXT
+TEST-1 as foo
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+foo baa
+09:30
+TEXT,
+        );
+        $this->controller->start('foo');
+
+        $this->assertEquals(
+            <<<TEXT
+TEST-1 as foo
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+foo baa
+09:30
+
+10:00
+foo baa
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
     public function should_load_existing_file(): void
     {
         $tmpFile = tempnam(sys_get_temp_dir(), 'test');
