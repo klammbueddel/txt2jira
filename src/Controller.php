@@ -184,6 +184,19 @@ class Controller
 
     public function delete()
     {
+        $lastNode = $this->getRoot()->getOneByCriteria(function (Node $node) {
+            return !$node instanceof EmptyLine && !$node instanceof Day;
+        }, true, true);
+
+        if ($lastNode instanceof Time) {
+            $lastNode->delete();
+
+            $this->io->info('Deleted '.$lastNode->time);
+            $this->save();
+
+            return;
+        }
+
         $lastIssue = $this->getRoot()->getIssue(true, true);
 
         if (!$lastIssue) {

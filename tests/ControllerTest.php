@@ -266,4 +266,56 @@ TEXT,
         $this->assertTrue($logs[0]->issues[0]->isDone);
     }
 
+    /** @test */
+    public function should_delete_break(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+10:00
+TEXT,
+        );
+
+        $this->controller->delete();
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_delete_issue(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+TEXT,
+        );
+
+        $this->controller->delete();
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+TEXT,
+            $this->controller->render()
+        );
+    }
+
 }
