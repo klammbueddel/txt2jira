@@ -20,6 +20,7 @@ class StartCommand extends AbstractCommand
 
         $this->addArgument('issue', InputArgument::IS_ARRAY, 'Name of the issue');
         $this->addOption('time', 't', InputOption::VALUE_OPTIONAL, 'Alternative start time');
+        $this->addOption('continue', 'c', InputOption::VALUE_NEGATABLE, 'Use last end time as start time.');
     }
 
     public function exec(Controller $controller, InputInterface $input, OutputInterface $output): int
@@ -28,6 +29,11 @@ class StartCommand extends AbstractCommand
 
         $args = $input->getArgument('issue');
         $time = $input->getOption('time');
+        $continue = $input->getOption('continue');
+
+        if ($continue) {
+            $time = $controller->lastTime();
+        }
 
         $issue = array_shift($args);
 

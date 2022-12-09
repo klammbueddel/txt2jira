@@ -352,6 +352,17 @@ class Controller
         return $today;
     }
 
+    public function lastTime(): ?string
+    {
+        $time = $this->getRoot()->getOneByType(Time::class, true, true);
+
+        if (!$time) {
+            return null;
+        }
+
+        return $time->time;
+    }
+
     public function roundTime(DateTime $time)
     {
         $seconds = $this->config->roundMinutes * 60;
