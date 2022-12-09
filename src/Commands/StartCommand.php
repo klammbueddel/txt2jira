@@ -18,7 +18,8 @@ class StartCommand extends AbstractCommand
         parent::__construct('start');
         $this->setDescription('Starts / stops a log');
 
-        $this->addArgument('issue', InputArgument::IS_ARRAY, 'Name of the issue');
+        $this->addArgument('issue', InputArgument::OPTIONAL, 'Name of the issue');
+        $this->addArgument('comments', InputArgument::IS_ARRAY, 'Name of the issue');
         $this->addOption('time', 't', InputOption::VALUE_OPTIONAL, 'Alternative start time');
         $this->addOption('continue', 'c', InputOption::VALUE_NEGATABLE, 'Use last end time as start time.');
     }
@@ -27,7 +28,8 @@ class StartCommand extends AbstractCommand
     {
         $logs = $controller->logs();
 
-        $args = $input->getArgument('issue');
+        $issue = $input->getArgument('issue');
+        $comments = $input->getArgument('comments');
         $time = $input->getOption('time');
         $continue = $input->getOption('continue');
 
@@ -35,13 +37,12 @@ class StartCommand extends AbstractCommand
             $time = $controller->lastTime();
         }
 
-        $issue = array_shift($args);
-
+        # extract issue number from branch name or link
         if ($issue && preg_match('/([A-Z]{2,}-[0-9]+)/', $issue, $matches)) {
             $issue = $matches[1];
         }
 
-        $comments = join(' ', $args);
+        $comments = join(' ', $comments);
 
         $transientLogs = array_values(
             array_filter($logs, function (Log $log) {
