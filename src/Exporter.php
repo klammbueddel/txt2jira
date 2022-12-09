@@ -192,7 +192,7 @@ class Exporter
                 foreach ($log->issues as $idx => $issueNode) {
                     /** @var $issueNode Issue */
 
-                    if ($issueNode->isDone) {
+                    if (! $all && $issueNode->isDone) {
                         continue;
                     }
                     if ($issueNode instanceof Pause) {

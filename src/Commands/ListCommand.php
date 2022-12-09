@@ -31,20 +31,19 @@ class ListCommand extends AbstractCommand
 
         $controller->load();
 
-        if ($all) {
+        if ($combine) {
             if ($breaks === true) {
-                throw new \Exception('breaks are not supported in all mode');
+                throw new \Exception('breaks are not supported in combine mode');
             }
             $breaks = false;
-            $chargableItems = $controller->aggregateAllLogs();
-        } else if ($combine) {
-            if ($breaks === true) {
-                throw new \Exception('breaks are not supported in all mode');
+
+            if ($all) {
+                $chargableItems = $controller->aggregateAllLogs();
+            } else {
+                $chargableItems = $controller->aggregateUncommittedLogs();
             }
-            $breaks = false;
-            $chargableItems = $controller->aggregateUncommittedLogs();
         } else {
-            $chargableItems = $controller->chargeableItems();
+            $chargableItems = $controller->chargeableItems($all);
             $breaks = $breaks ?? true;
         }
         $output->writeln($controller->getRenderer()->render($chargableItems, $breaks));
