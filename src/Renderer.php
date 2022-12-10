@@ -70,13 +70,13 @@ class Renderer
             # render break
             if ($breaks && !$newDay && $lastLog && $lastLog['end'] != $log['date']) {
                 $break = str_pad('', 7, ' ')
-                    .Exporter::formatJiraTime($log['date']->getTimestamp() - $lastLog['end']->getTimestamp());
+                    . JiraDateInterval::formatSeconds($log['date']->getTimestamp() - $lastLog['end']->getTimestamp());
                 $lines[] = self::colorize($break, 'yellow');
             }
 
             $lines[] = $this->renderLog($log, $breaks, $isLast);
 
-            $total += $log['total'] * 60;
+            $total += $log['total'];
             $lastLog = $log;
         }
 
@@ -87,7 +87,7 @@ class Renderer
             $seconds = (new DateTime())->getTimestamp() - $lastLog['end']->getTimestamp();
             if ($seconds > 60) {
                 $break = str_pad('', 7, ' ')
-                    .Exporter::formatJiraTime((new DateTime())->getTimestamp() - $lastLog['end']->getTimestamp());
+                    .JiraDateInterval::formatSeconds((new DateTime())->getTimestamp() - $lastLog['end']->getTimestamp());
                 $lines[] = self::colorize($break, 'yellow');
             }
         }
@@ -106,7 +106,7 @@ class Renderer
     {
         $lines[] =
             "----------------------------------------------------- "
-            .str_pad($this->colorize(Exporter::formatJiraTime($total, 0), 'green').' ', 69, '-');
+            .str_pad($this->colorize(JiraDateInterval::formatMinutes($total, 0), 'green').' ', 69, '-');
         $lines[] = '';
     }
 
@@ -153,7 +153,7 @@ class Renderer
      */
     private function minutes($log): string
     {
-        return Exporter::formatJiraTime(($log['total'] ?: $log['minutes']) * 60);
+        return JiraDateInterval::formatMinutes($log['total'] ?: $log['minutes']);
     }
 
 }

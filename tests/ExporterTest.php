@@ -334,13 +334,4 @@ TEXT
         $this->assertEquals('Review', $item->getComment());
     }
 
-    /** @test */
-    public function should_format_jira_time()
-    {
-        $this->assertEquals('1h', Exporter::formatJiraTime(3600, 0));
-        $this->assertEquals('1h 30m', Exporter::formatJiraTime(3600 + 1800, 0));
-        # ignore seconds
-        $this->assertEquals('1h 30m', Exporter::formatJiraTime(3600 + 1800 + 10, 0));
-    }
-
 }
