@@ -20,16 +20,16 @@ class Controller
      * Will be lazy initialized, use getRoot() to fetch.
      */
     private Exporter $exporter;
-    private Importer $importer;
+    private ?Importer $importer = null;
     private Renderer $renderer;
     private Interpreter $interpreter;
     private Interactor $io;
     private ?Node $_root = null;
 
     /**
-     * @return Importer
+     * @return Importer|null
      */
-    public function getImporter(): Importer
+    public function getImporter(): ?Importer
     {
         return $this->importer;
     }
