@@ -64,6 +64,37 @@ TEXT,
     }
 
     /** @test */
+    public function should_start_at_duplicate_start(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:00'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1 baa
+09:30
+TEXT,
+        );
+        $this->controller->start('TEST-2', '', '09:00');
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1 baa
+09:30
+
+09:00
+TEST-2
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
     public function should_start_with_last_comment_from_alias(): void
     {
         ClockMock::freeze(new DateTime('2022-11-25 10:00'));

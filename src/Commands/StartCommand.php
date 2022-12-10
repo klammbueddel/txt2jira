@@ -5,6 +5,7 @@ namespace App\Commands;
 use App\Controller;
 use App\Model\Alias;
 use App\Model\Log;
+use App\SyntaxError;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,7 +21,7 @@ class StartCommand extends AbstractCommand
 
         $this->addArgument('issue', InputArgument::OPTIONAL, 'Name of the issue');
         $this->addArgument('comments', InputArgument::IS_ARRAY, 'Name of the issue');
-        $this->addOption('time', 't', InputOption::VALUE_OPTIONAL, 'Alternative start time');
+        $this->addOption('time', 't', InputOption::VALUE_OPTIONAL, 'Alternative start / stop time');
         $this->addOption('continue', 'c', InputOption::VALUE_NEGATABLE, 'Use last end time as start time.');
     }
 
@@ -28,7 +29,7 @@ class StartCommand extends AbstractCommand
     {
         $logs = $controller->logs();
 
-        $issue = $input->getArgument('issue');
+        $issue = $input->getArgument('issue') ?? '';
         $comments = $input->getArgument('comments');
         $time = $input->getOption('time');
         $continue = $input->getOption('continue');
@@ -40,6 +41,15 @@ class StartCommand extends AbstractCommand
         # extract issue number from branch name or link
         if ($issue && preg_match('/([A-Z]{2,}-[0-9]+)/', $issue, $matches)) {
             $issue = $matches[1];
+        }
+
+        if ($controller->addStandalone($issue . ' ' . join(' ', $comments))) {
+            return 0;
+        }
+
+        if ($timeNode = $controller->tryParseTime($issue)) {
+            $time = $timeNode->time;
+            $issue = array_shift($comments);
         }
 
         $comments = join(' ', $comments);

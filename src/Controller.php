@@ -24,6 +24,7 @@ class Controller
     private Renderer $renderer;
     private Interpreter $interpreter;
     private Interactor $io;
+    private Parser $parser;
     private ?Node $_root = null;
 
     /**
@@ -58,6 +59,7 @@ class Controller
         }
         $this->renderer = new Renderer($this->importer);
         $this->interpreter = new Interpreter();
+        $this->parser = new Parser($this->config);
     }
 
     /**
@@ -66,8 +68,7 @@ class Controller
      */
     public function parse(string $content): Node
     {
-        $parser = new Parser($this->config);
-        $this->_root = $parser->parse($content);
+        $this->_root = $this->parser->parse($content);
         $this->interpreter->getLogs($this->_root);
         return $this->_root;
     }
@@ -276,16 +277,46 @@ class Controller
         $this->editTimeNode($time, $lastTime, $insertBreak);
     }
 
+    public function addStandalone($log)
+    {
+        if ($timeNode = $this->tryParseTime($log)) {
+            if ($timeNode->children) {
+                $this->appendNode($timeNode);
+                $this->save();
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function appendNode(Node $node, $addEmptyLine = false)
+    {
+        $today = $this->today();
+        $lastNode = $today->getOneByCriteria(function (Node $node) {
+            return !$node instanceof EmptyLine;
+        }, true, true);
+
+        if ($lastNode) {
+            $lastNode->insertSibling($node);
+            if ($addEmptyLine) {
+                $lastNode->insertSibling(new EmptyLine());
+            }
+        } else {
+            $today->addChild($node);
+            if ($addEmptyLine) {
+                $today->addChild(new EmptyLine());
+            }
+        }
+    }
+
     public function start($issue = null, $comment = '', $time = null)
     {
         $time = $time ? $this->io->parseTime($time) : $this->roundTime(new DateTime())->format('H:i');
-        $issue = $issue ?? $this->io->getIssue($this->getRoot(), "Start at ".$time.': ');
+        $issue = $issue ?: $this->io->getIssue($this->getRoot(), "Start at ".$time.': ');
 
-        $today = $this->today();
-
-        $now = $today->getOneByCriteria(function (Node $node) use ($time) {
-            return $node instanceof Time && $node->time === $time;
-        }, false, true);
+        $now = $this->now($time);
 
         $lastIssue = $this->getRoot()->getOneByCriteria(function (Node $node) use ($issue) {
             return $node instanceof Issue && (!$issue || $node->issue === $issue || $node->alias === $issue);
@@ -295,21 +326,6 @@ class Controller
             $input = $lastIssue ? $lastIssue->alias.' '.$comment : $issue.' '.$comment;
         } else {
             $input = $lastIssue ? $lastIssue->input : $issue;
-        }
-
-        if (!$now) {
-            $now = new Time($time);
-            $last = $today->getOneByCriteria(function (Node $node) {
-                return !($node instanceof EmptyLine);
-            }, false, true);
-
-            if ($last) {
-                $last->insertSibling($now);
-                $last->insertSibling(new EmptyLine());
-            } else {
-                $today->prependChild($now);
-                $today->prependChild(new EmptyLine());
-            }
         }
 
         $now->insertSibling(new Issue($input, false));
@@ -384,7 +400,7 @@ class Controller
         }
     }
 
-    public function today(): ?Day
+    public function today(): Day
     {
         $today = $this->getRoot()->getOneByCriteria(function (Node $node) {
             return $node instanceof Day && $node->date === ($this->roundTime(new DateTime()))->format('d.m.Y');
@@ -399,6 +415,24 @@ class Controller
         return $today;
     }
 
+    public function now($time): Time
+    {
+        $today = $this->today();
+
+        $lastTime = $today->getOneByCriteria(function (Node $node) use ($time) {
+            return $node instanceof Time;
+        }, true, true);
+
+        if ($lastTime && $lastTime->time === $time) {
+            return $lastTime;
+        }
+
+        $result = new Time($time);
+        $this->appendNode($result, true);
+
+        return $result;
+    }
+
     public function lastTime(): ?string
     {
         $time = $this->getRoot()->getOneByType(Time::class, true, true);
@@ -408,6 +442,15 @@ class Controller
         }
 
         return $time->time;
+    }
+
+    public function tryParseTime($input)
+    {
+        try {
+            return $this->parser->parseTime($input);
+        } catch (SyntaxError) {
+            return null;
+        }
     }
 
     public function roundTime(DateTime $time)

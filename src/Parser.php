@@ -69,10 +69,10 @@ class Parser
         return null;
     }
 
-    private function parseTime(string $line, $lineNumber): ?Time
+    public function parseTime(string $line, $lineNumber = 0): ?Time
     {
         # matches time and pause
-        if (preg_match('/^([0-9]{2}:[0-9]{2})(.*)$/', $line, $matches)) {
+        if (preg_match('/^([0-9]{1,2}:[0-9]{2})(.*)$/', $line, $matches)) {
             $time = new Time($matches[1]);
             if ($minutes = $this->parseMinutes(trim($matches[2]))) {
                 $time->addChild($minutes);

@@ -19,7 +19,7 @@ class Exporter
     public function export(Interactor $io, $items, callable $onChange = null)
     {
         foreach ($items as $item) {
-            $io->write('Log '.self::formatJiraTime($item['minutes'] * 60).' '.$item['issue'].' '.$item['comment']);
+            $io->write('Log '.JiraDateInterval::formatMinutes($item['minutes']).' '.$item['issue'].' '.$item['comment']);
 
             try {
                 $this->client->addWorkLog($item['issue'], $item['comment'], $item['date'], $item['minutes']);
@@ -333,21 +333,6 @@ class Exporter
 
     public static function formatJiraTime(int $s, $strPad = 7)
     {
-        if ($s < 0) {
-            return '-'.self::formatJiraTime(abs($s));
-        }
-        $h = floor($s / 3600);
-        $s -= $h * 3600;
-        $m = floor($s / 60);
-
-        $items = [];
-        if ($h) {
-            $items[] = "{$h}h";
-        }
-        if ($m) {
-            $items[] = "{$m}m";
-        }
-
-        return str_pad(implode(' ', $items), $strPad, ' ');
+        return JiraDateInterval::formatSeconds($s, $strPad);
     }
 }
