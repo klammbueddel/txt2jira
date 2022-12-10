@@ -2,45 +2,11 @@
 
 namespace App\Tests;
 
-use Ahc\Cli\IO\Interactor;
-use App\Config;
-use App\Controller;
-use App\JiraClient;
 use DateTime;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 use SlopeIt\ClockMock\ClockMock;
-use Symfony\Component\Console\Helper\QuestionHelper;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
-final class ControllerTest extends TestCase
+final class ControllerTest extends AbstractControllerTest
 {
-
-    private $controller = null;
-    private $input = null;
-    private $output = null;
-    private $questionHelper = null;
-    private Config $config;
-    private MockObject $client;
-
-    protected function setUp(): void
-    {
-        $this->config = new Config();
-        if (file_exists($this->config->getJiraCache())) {
-            unlink($this->config->getJiraCache());
-        }
-        if (file_exists($this->config->getFile())) {
-            unlink($this->config->getFile());
-        }
-        $this->client = $this->createMock(JiraClient::class);
-        $this->controller = new Controller($this->config, $this->client);
-
-        $this->input = $this->createMock(InputInterface::class);
-        $this->output = $this->createMock(OutputInterface::class);
-        $this->questionHelper = $this->createMock(QuestionHelper::class);
-        $this->controller->setIo($this->input, $this->output, $this->questionHelper);
-    }
 
     /** @test */
     public function should_read_empty_file(): void
