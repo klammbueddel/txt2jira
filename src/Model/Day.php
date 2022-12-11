@@ -8,7 +8,6 @@ class Day extends Node
 
     public function __toString(): string
     {
-        return "{$this->date} +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
-            .parent::__toString();
+        return "{$this->date}\n".parent::__toString();
     }
 }

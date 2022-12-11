@@ -17,7 +17,7 @@ Started TEST-1 Do some work at 09:00
 The log file will look like this:
 
 ```text
-04.12.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+04.12.2022
 
 09:00
 TEST-1 Do some work
@@ -43,7 +43,7 @@ Started TEST-2 Do some other work at 09:20
 ```
 
 ```text
-04.12.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+04.12.2022
 
 09:00
 TEST-1 Do some work
@@ -62,7 +62,7 @@ Stopped TEST-1 Do some work at 09:30
 
 The end time is added to the log file.
 ```text
-04.12.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+04.12.2022
 
 09:00
 TEST-1 Do some work
@@ -143,7 +143,7 @@ Use aliases for recurring tasks.
 ```TEXT
 TEST-1 as Coffee
 
-14.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+14.10.2022
 
 08:00
 Coffee Clean machine
@@ -155,7 +155,7 @@ Coffee Clean machine
 ```TEXT
 TEST-1 as Coffee
 
-04.12.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+04.12.2022
 
 08:00
 Coffee Clean machine
@@ -181,7 +181,7 @@ Once committed, log items will be flagged with an `x`.
 ```TEXT
 TEST-1 as Coffee
 
-14.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+14.10.2022
 
 08:00
 Coffee Clean machine x

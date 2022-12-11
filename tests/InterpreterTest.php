@@ -33,12 +33,12 @@ final class InterpreterTest extends TestCase
                 <<<TEXT
 
 TEST-1 as GlobalAlias 
-11.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+11.10.2022
 TEST-2 as LocalAlias
 07:15 5m TEST-2 Some Issue
 07:30 5m GlobalAlias Some Issue
 
-12.10.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+12.10.2022
 OVERWRITE-1 as GlobalAlias
 07:15 5m LocalAlias Some Issue
 07:30 5m GlobalAlias Some Issue
