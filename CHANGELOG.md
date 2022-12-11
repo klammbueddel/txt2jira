@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2022-12-11
+### Changed
+- The `start` command was renamed to `log` command. The `stop` command was removed.
+- Change order of suggestions to show last recent at bottom.
+- The `delete` command now deletes the end time before removing the whole log. This is useful to continue the work on the current task.
+### Fixed
+- Move logs to other days if changed time crosses day border.
+- Use comment of last issue when started via alias.
+### Added
+- Support to add start `<time>` to `log` command
+- Support to pass `<duration>` to `log` command in Jira format
+- Support to show all logs uncombined (`list -a`)
+- Add `clear-cache` command to clear the cache.
+- Offline mode (`--offline` flag) to disable summary resolving on demand.
+- Use of alternative config file (`--file` option).
+
 ## [2.0.0] - 2022-12-04
 ### Updated
 - Complete rewrite of parser and interpreter semantics
