@@ -40,6 +40,10 @@ class JiraClient
             throw new Exception(curl_error($ch));
         }
 
+        if ($info['http_code'] === 401) {
+            throw new HttpException("Unauthorized", $info['http_code']);
+        }
+
         if ($info['http_code'] >= 400) {
             throw new HttpException($response, $info['http_code']);
         }

@@ -6,7 +6,6 @@ use App\Config;
 use App\HttpException;
 use App\Importer;
 use App\JiraClient;
-use Exception;
 use PHPUnit\Framework\TestCase;
 
 final class ImporterTest extends TestCase
@@ -59,6 +58,18 @@ final class ImporterTest extends TestCase
 
         # second call should be cached
         $this->assertEquals('ERROR: The issue key is invalid.', $this->createImporter()->getSummary('test-1'));
+    }
+
+    /** @test */
+    public function should_throw_error_if_unauthorized()
+    {
+        $this->client->expects($this->exactly(1))
+            ->method('getIssues')
+            ->with(['TEST-1'])
+            ->willThrowException(new HttpException('Unauthorized', 401));
+
+        $this->expectException(HttpException::class);
+        $this->createImporter()->getSummary('test-1');
     }
 
     /** @test */
