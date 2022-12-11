@@ -20,10 +20,10 @@ class LogCommand extends AbstractCommand
         parent::__construct('log');
         $this->setDescription('Adds a log');
 
-        $this->addArgument('time', InputArgument::OPTIONAL, 'Time of the issue');
-        $this->addArgument('duration', InputArgument::OPTIONAL, 'Duration of the issue');
+        $this->addArgument('time', InputArgument::OPTIONAL, 'Start time of the log entry');
+        $this->addArgument('duration', InputArgument::OPTIONAL, 'Duration of the log entry');
         $this->addArgument('issue', InputArgument::OPTIONAL, 'Name of the issue');
-        $this->addArgument('comments', InputArgument::IS_ARRAY, 'Comment');
+        $this->addArgument('comments', InputArgument::IS_ARRAY, 'Comment of the log entry');
         $this->addOption('continue', 'c', InputOption::VALUE_NEGATABLE, 'Use last end time as start time.');
     }
 
