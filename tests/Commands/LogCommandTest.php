@@ -39,6 +39,30 @@ final class LogCommandTest extends AbstractControllerTest
     }
 
     /** @test */
+    public function should_change_current_comment(): void
+    {
+        $app = new Application();
+        $app->add($this->command);
+        ClockMock::freeze(new DateTime('2022-11-25 09:00'));
+        $commandTester = new CommandTester($this->command);
+        $commandTester->execute([
+            'issue' => 'TEST-1',
+            '--file' => 'tests/.txt2jira',
+        ]);
+
+        $commandTester->execute([
+            'issue' => 'TEST-1 Add some comment',
+            '--file' => 'tests/.txt2jira',
+        ]);
+
+        $logs = $this->controller->logs();
+        $this->assertCount(1, $logs);
+        $this->assertEquals('TEST-1', $logs[0]->issues[0]->issue);
+        $this->assertEquals('Add some comment', $logs[0]->issues[0]->comment);
+        $this->assertEquals('2022-11-25 09:00', $logs[0]->start->format('Y-m-d H:i'));
+    }
+
+    /** @test */
     public function should_stop_after_duration(): void
     {
         $app = new Application();

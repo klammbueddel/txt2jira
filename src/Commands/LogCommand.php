@@ -66,7 +66,7 @@ class LogCommand extends AbstractCommand
             $issue = $matches[1];
         }
 
-        $comments = join(' ', $arguments);
+        $comments = trim(join(' ', $arguments));
 
         $transientLogs = array_values(
             array_filter($logs, function (Log $log) {
@@ -76,7 +76,11 @@ class LogCommand extends AbstractCommand
 
         if ($transientLogs) {
             if ($issue && $transientLogs[0]?->issues[0]?->alias === $issue) {
-                $output->writeln('Running since '.$transientLogs[0]->start->format('H:i'));
+                if ($comments && $transientLogs[0]?->issues[0]?->comment !== $comments) {
+                    $controller->comment(false, $comments);
+                } else {
+                    $output->writeln('Running since '.$transientLogs[0]->start->format('H:i'));
+                }
             } else {
                 $controller->stop($time, $duration);
 
