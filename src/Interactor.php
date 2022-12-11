@@ -29,7 +29,7 @@ class Interactor
 
     }
 
-    public function parseTime($time, $default = null): string
+    public function parseTime($time, $default = null): DateTime
     {
         $result = null;
         $round = false;
@@ -38,30 +38,41 @@ class Interactor
             $time = $matches[1];
         }
 
-        if (preg_match('/^\d+$/', $time)) {
-            $result = new DateTime((new DateTime())->format('H').':'.str_pad($time, 2, '0', STR_PAD_LEFT));
+        $negative = false;
+        if (preg_match('/^[-_](.*)/', $time, $matches)) {
+            $negative = true;
+            $time = $matches[1];
         }
 
-        if (! $result && preg_match('/^\+(\d+)$/', $time, $matches)) {
-            $result = (new DateTime($default))->add(new DateInterval('PT'.$matches[1].'M'));
+        $interval = JiraDateInterval::parse($time);
+        if ($interval->getMinutes()) {
+            if ($negative) {
+                $result = (new DateTime($default))->sub($interval);
+            } else {
+                $result = (new DateTime($default))->add($interval);
+            }
         }
 
-        if (! $result && preg_match('/^[\-_](\d+)$/', $time, $matches)) {
-            $result = (new DateTime($default))->sub(new DateInterval('PT'.$matches[1].'M'));
+        if (!$result && preg_match('/^(\d+):(\d+)$/', $time, $matches)) {
+            $result = (new DateTime())->setTime($matches[1], $matches[2]);
+        }
+        if (!$result && preg_match('/^(\d{2})(\d{2})$/', $time, $matches)) {
+            $result = (new DateTime())->setTime($matches[1], $matches[2]);
         }
 
-        if (! $result && !preg_match('/^(\d+):(\d+)$/', $time, $matches)) {
+        if (!$result && !$default) {
             throw new InvalidArgumentException('Invalid time');
         }
 
-        if (! $result) {
-            $result = (new DateTime($default))->setTime($matches[1], $matches[2]);
+        if (!$result) {
+            $result = new DateTime($default);
         }
 
         if ($round) {
             $result = $this->roundTime($result);
         }
-        return $result->format('H:i');
+
+        return $result;
     }
 
     public function roundTime(DateTime $time)
@@ -73,7 +84,7 @@ class Interactor
         return $time;
     }
 
-    public function promptTime($prompt, $default = null)
+    public function promptTime($prompt, $default = null): DateTime
     {
         $white = new Color('white');
         $gray = new Color('gray');
@@ -220,7 +231,7 @@ class Interactor
     public function confirm($prompt, $default = false)
     {
         $cyan = new Color('cyan');
-        $question = new ConfirmationQuestion($cyan->apply($prompt . '(y/n): '), $default);
+        $question = new ConfirmationQuestion($cyan->apply($prompt.'(y/n): '), $default);
 
         return $this->questionHelper->ask($this->input, $this->output, $question);
     }
@@ -229,7 +240,8 @@ class Interactor
     {
         $cyan = new Color('cyan');
         $gray = new Color('gray');
-        $question = new Question($cyan->apply($prompt).($default ? ' '.$gray->apply('('.$default.')') : '') .': ', $default);
+        $question =
+            new Question($cyan->apply($prompt).($default ? ' '.$gray->apply('('.$default.')') : '').': ', $default);
 
         if (!$question) {
             return $default;

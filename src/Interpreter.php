@@ -60,7 +60,7 @@ class Interpreter
                 foreach ($node->children as $childNode) {
 
                     if ($childNode instanceof Time) {
-                        if ($childNode->children) {
+                        if ($childNode->children && $childNode->children[0] instanceof Minutes) {
                             $standalone = $this->standaloneLog($root, $day, $childNode);
                             if ($currentLog && $currentLog->issues) {
                                 $currentLog->addChild($standalone);
@@ -82,16 +82,18 @@ class Interpreter
                             $currentLog = new Log(new DateTime($day->date.' '.$childNode->time));
                             $logs[] = $currentLog;
                         }
-                    }
 
-                    if ($childNode instanceof Issue) {
-                        if (!$currentLog) {
-                            throw new SyntaxError('Could not find start time of '.$childNode->input);
+                        foreach($childNode->children as $child) {
+                            if ($child instanceof Issue) {
+                                $currentLog->issues[] = $this->resolveAliases($child, $day);
+                            }
+                            if ($child instanceof Time) {
+                                $standalone = $this->standaloneLog($root, $day, $child);
+                                $currentLog->addChild($standalone);
+                            }
                         }
-                        $currentLog->issues[] = $this->resolveAliases($childNode, $day);
                     }
                 }
-
             }
         }
         if ($currentLog && $currentLog->issues && !$currentLog->end) {
@@ -102,7 +104,7 @@ class Interpreter
         # filter logs with start and end time
         return array_values(
             array_filter($logs, function (Log $log) {
-                return $log->start && $log->end;
+                return $log->start && $log->end || $log->children;
             })
         );
     }

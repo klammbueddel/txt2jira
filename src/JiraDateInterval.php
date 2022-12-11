@@ -8,6 +8,35 @@ use DateTimeImmutable;
 class JiraDateInterval extends DateInterval
 {
 
+    public static function parse(string $input)
+    {
+        $minutes = 0;
+        $tokens = explode(' ', $input);
+        foreach($tokens as $token) {
+            if (preg_match('/^([0-9\.]+)m$/', $token, $matches)) {
+                $minutes += $matches[1];
+            }
+
+            if (preg_match('/^([0-9\.]+)h$/', $token, $matches)) {
+                $minutes += $matches[1] * 60;
+            }
+
+            if (preg_match('/^([0-9\.]+)d$/', $token, $matches)) {
+                $minutes += $matches[1] * 60 * 24;
+            }
+        }
+
+        return new JiraDateInterval('PT'.round($minutes).'M');
+    }
+
+    public function getMinutes(): int
+    {
+        $reference = new DateTimeImmutable;
+        $endTime = $reference->add($this);
+
+        return round(($endTime->getTimestamp() - $reference->getTimestamp()) / 60);
+    }
+
     public static function formatMinutes(int $m, $strPad = 7)
     {
         if ($m < 0) {

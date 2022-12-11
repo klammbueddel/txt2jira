@@ -14,6 +14,7 @@ class Config
     public string $jiraCache = '~/.txt2jira.cache';
     public int $roundMinutes = 5;
     public string $dateRegex = '/^([0-9]{2}\.[0-9]{2}\.[0-9]{4}).*/';
+    public string $dateFormat = 'd.m.Y';
     private string $configFile;
 
     /**

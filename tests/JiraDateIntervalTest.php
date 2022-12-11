@@ -27,4 +27,13 @@ final class JiraDateIntervalTest extends TestCase
         $this->assertEquals('-1h 30m', JiraDateInterval::formatMinutes(-90, 0));
     }
 
+    /** @test */
+    public function should_parse_time()
+    {
+        $this->assertEquals(60, JiraDateInterval::parse('1h')->getMinutes());
+        $this->assertEquals(70, JiraDateInterval::parse('1h 10m')->getMinutes());
+        $this->assertEquals(30, JiraDateInterval::parse('0.5h')->getMinutes());
+        $this->assertEquals(20, JiraDateInterval::parse('0.33h')->getMinutes());
+    }
+
 }

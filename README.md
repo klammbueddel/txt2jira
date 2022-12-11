@@ -7,10 +7,10 @@ Edit the file manually or use the provided commands to interact with the log fil
 
 ## Getting started
 
-Start your work day with the `start` command. It will add the current time to the log file rounded to 5 minute.
+Start your work day with the `log` command. It will add the current time to the log file rounded to 5 minute.
 
 ```bash
-09:02 $ ./txt2jira start TEST-1 Do some work
+09:02 $ ./txt2jira log TEST-1 Do some work
 Started TEST-1 Do some work at 09:00
 ```
 
@@ -37,7 +37,7 @@ Use the `list` command to see all entries in the log file. Notice that the summa
 It is easy to switch to another task by just starting it.
 
 ```bash
-09:19 $ ./txt2jira start TEST-2 Do some other work
+09:19 $ ./txt2jira log TEST-2 Do some other work
 Stopped TEST-1 Do some work at 09:20
 Started TEST-2 Do some other work at 09:20
 ```
@@ -53,10 +53,10 @@ TEST-2 Do some other work
 
 ### Stop working
 
-Use the `stop` command when you are finished or need a break. Using the `start` command will also do the job.
+Running the `log` command while a log is active will stop the current log. Add optional `<time>` or `<duration>` for alternative end time.
 
 ```bash
-09:29 $ ./txt2jira stop`
+09:29 $ ./txt2jira log`
 Stopped TEST-1 Do some work at 09:30
 ```
 
@@ -72,9 +72,15 @@ TEST-2 Do some other work
 ```
 
 ### Explore other useful features
-* Use the `start` command without arguments to select from the last recent tasks.
-* Use the `edit` command to manipulate the current start / end time.
-* Use the `comment` command to change or add comments to the current task.
+* Use the `log` command without arguments to select from the last recent tasks.
+* Use the `log` command with `<issue>` or `<issue> <comments>` arguments to log or switch to task.
+* Type `log 10m TEST-1` to add a task with a duration of 10 minutes.  
+* Type `log 10:00 15m TEST-1` to add a task from 10:00 to 10:15.  
+* Type `log -c` to continue from last end date. 
+* Type `log 1h` to add a break of 1 hour if task is still running. 
+* Use the `time` command to manipulate the current start / end time.
+* Use the `comment` command to change the comment of the current task.
+* Use the `comment -a` command to add comments to the current task.
 * Use the `issue` command to change the issue of the current task.
 * Use the `delete` command to remove a task from the log file.
 * Use the `clear-cache` command to clear the cache.
@@ -120,7 +126,7 @@ sudo ln -s $(pwd)/txt2jira /usr/local/bin/txt2jira
 Maybe you want to add some bash aliases to ease the usage even more.
 ```bash
 alias w='txt2jira'
-alias ws='txt2jira start'
+alias ws='txt2jira log'
 alias wl='txt2jira list'
 alias wd='txt2jira delete'
 alias wc='txt2jira comment'

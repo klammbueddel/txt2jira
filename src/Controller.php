@@ -156,7 +156,7 @@ class Controller
         }
     }
 
-    public function stop($time = null)
+    public function stop($time = null, $duration = null): ?Issue
     {
         $transientLogs = array_values(
             array_filter($this->logs(), function (Log $log) {
@@ -167,90 +167,71 @@ class Controller
         if (!$transientLogs) {
             $this->io->warn('No active log');
 
-            return;
+            return null;
         }
 
         $lastIssue = $this->getRoot()->getIssue(true, true);
         if (!$lastIssue) {
             $this->io->warn('No active log');
 
-            return;
+            return null;
         }
 
-        $time = $time ? $this->io->parseTime($time) : $this->roundTime(new DateTime())->format('H:i');
+        $time = $time
+            ? $this->io->parseTime($time, "$duration minutes ago")
+            : $this->roundTime(new DateTime("$duration minutes ago"));
 
-        $lastIssue->insertSibling(new Time($time));
+        $time = $time->format('H:i');
+
+        $lastIssue->parent->insertSibling(new Time($time));
         $this->save();
 
         $this->io->info("Stopped {$lastIssue->input} at ".$time);
+
+        return $lastIssue;
     }
 
     public function delete()
     {
         $lastNode = $this->getRoot()->getOneByCriteria(function (Node $node) {
-            return !$node instanceof EmptyLine && !$node instanceof Day;
+            if ($node instanceof Day) {
+                # do not delete non empty day
+                if ($node->getByCriteria(function (Node $node) {
+                    return !$node instanceof EmptyLine;
+                })) {
+                    return false;
+                }
+            }
+
+            return !$node instanceof EmptyLine;
         }, true, true);
 
-        if ($lastNode instanceof Time) {
-            $lastNode->delete();
-
-            $this->io->info('Deleted '.$lastNode->time);
-            $this->save();
-
-            return;
-        }
-
-        $lastIssue = $this->getRoot()->getIssue(true, true);
-
-        if (!$lastIssue) {
+        if (!$lastNode) {
             $this->io->warn('Nothing to delete');
 
             return;
         }
 
-        $toDelete = [$lastIssue];
-        $prev = $lastIssue->getSibling(-1);
-        $start = $end = '--:--';
-
-        if ($prev instanceof Time) {
-            $start = $prev->time;
-            if ($prev->getSibling(-1) instanceof EmptyLine) {
-                $toDelete[] = $prev;
-                $toDelete[] = $prev->getSibling(-1);
-            }
+        if (($emptyLine = $lastNode->getSibling(-1)) instanceof EmptyLine) {
+            $emptyLine->delete();
         }
+        $lastNode->delete();
 
-        $next = $lastIssue->getSibling();
-        if ($next instanceof Time) {
-            $toDelete[] = $next;
-            $end = $next->time;
-        }
-
-        foreach ($toDelete as $node) {
-            $node->delete();
-        }
-
-        $this->io->info('Deleted '.$start.' - '.$end.'  '.$lastIssue->input);
+        $this->io->info('Deleted '. trim($lastNode));
         $this->save();
     }
 
     public function editStartTime($time = null, $insertBreak = true)
     {
         $lastIssue = $this->getRoot()->getIssue(true, true);
-        while ($sibling = $lastIssue->getSibling(-1)) {
-            if ($sibling instanceof Time) {
-                $startTime = $sibling;
-                break;
-            }
-        }
 
-        if (!$startTime) {
+        if (!$lastIssue->parent instanceof Time) {
             $this->io->warn('No start time found');
 
             return;
         }
 
-        return $this->editTimeNode($time, $startTime, $insertBreak);
+        return $this->editTimeNode($time, $lastIssue->parent, $insertBreak);
     }
 
     public function editTime($time = null, $insertBreak = true, $editStartTime = null)
@@ -267,34 +248,16 @@ class Controller
             return $this->editStartTime($time, $insertBreak);
         }
 
-        $lastNode = $this->getRoot()->getOneByCriteria(function (Node $node) {
-            return !$node instanceof EmptyLine && !$node instanceof Day;
-        }, true, true);
-        if ($lastNode instanceof Time) {
+        if (! $lastTime->children) {
             $insertBreak = false;
         }
 
         $this->editTimeNode($time, $lastTime, $insertBreak);
     }
 
-    public function addStandalone($log)
+    private function appendNode(Node $parent, Node $node, $addEmptyLine = false)
     {
-        if ($timeNode = $this->tryParseTime($log)) {
-            if ($timeNode->children) {
-                $this->appendNode($timeNode);
-                $this->save();
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function appendNode(Node $node, $addEmptyLine = false)
-    {
-        $today = $this->today();
-        $lastNode = $today->getOneByCriteria(function (Node $node) {
+        $lastNode = $parent->getOneByCriteria(function (Node $node) {
             return !$node instanceof EmptyLine;
         }, true, true);
 
@@ -304,19 +267,22 @@ class Controller
                 $lastNode->insertSibling(new EmptyLine());
             }
         } else {
-            $today->addChild($node);
+            $parent->addChild($node);
             if ($addEmptyLine) {
-                $today->addChild(new EmptyLine());
+                $parent->addChild(new EmptyLine());
             }
         }
     }
 
-    public function start($issue = null, $comment = '', $time = null)
+    public function start($issue = null, $comment = '', $time = null, $duration = 0)
     {
-        $time = $time ? $this->io->parseTime($time) : $this->roundTime(new DateTime())->format('H:i');
+        $dateTime =
+            $time ? $this->io->parseTime($time, "$duration minutes ago") :
+                $this->roundTime(new DateTime("$duration minutes ago"));
+        $time = $dateTime->format('H:i');
         $issue = $issue ?: $this->io->getIssue($this->getRoot(), "Start at ".$time.': ');
 
-        $now = $this->now($time);
+        $now = $this->now($dateTime);
 
         $lastIssue = $this->getRoot()->getOneByCriteria(function (Node $node) use ($issue) {
             return $node instanceof Issue && (!$issue || $node->issue === $issue || $node->alias === $issue);
@@ -328,10 +294,18 @@ class Controller
             $input = $lastIssue ? $lastIssue->input : $issue;
         }
 
-        $now->insertSibling(new Issue($input, false));
+        $now->addChild(new Issue($input, false));
 
         $this->save();
         $this->io->info("Started {$input} at ".$time);
+
+        if ($duration) {
+            $endDateTime = $dateTime->add(new \DateInterval('PT'.$duration.'M'));
+            $endTime = $endDateTime->format('H:i');
+            $this->appendNode($this->today($endDateTime), new Time($endTime));
+            $this->save();
+            $this->io->info("Stopped {$input} at ".$endTime);
+        }
     }
 
     public function changeIssue($issue = null, $comment = null)
@@ -400,14 +374,16 @@ class Controller
         }
     }
 
-    public function today(): Day
+    public function today(DateTime $dateTime = null): Day
     {
-        $today = $this->getRoot()->getOneByCriteria(function (Node $node) {
-            return $node instanceof Day && $node->date === ($this->roundTime(new DateTime()))->format('d.m.Y');
+        $today = $this->getRoot()->getOneByCriteria(function (Node $node) use ($dateTime) {
+            return $node instanceof Day && $node->date === ($this->roundTime($dateTime ?: new DateTime()))->format(
+                    $this->config->dateFormat
+                );
         });
 
         if (!$today) {
-            $today = new Day(($this->roundTime(new DateTime()))->format('d.m.Y'));
+            $today = new Day(($this->roundTime($dateTime ?: new DateTime()))->format($this->config->dateFormat));
             $this->getRoot()->addChild($today);
             $today->addChild(new EmptyLine());
         }
@@ -415,20 +391,21 @@ class Controller
         return $today;
     }
 
-    public function now($time): Time
+    public function now(DateTime $dateTime): Time
     {
-        $today = $this->today();
+        $today = $this->today($dateTime);
 
-        $lastTime = $today->getOneByCriteria(function (Node $node) use ($time) {
+        $lastTime = $today->getOneByCriteria(function (Node $node) {
             return $node instanceof Time;
         }, true, true);
 
+        $time = $dateTime->format('H:i');
         if ($lastTime && $lastTime->time === $time) {
             return $lastTime;
         }
 
         $result = new Time($time);
-        $this->appendNode($result, true);
+        $this->appendNode($today, $result, true);
 
         return $result;
     }
@@ -444,7 +421,7 @@ class Controller
         return $time->time;
     }
 
-    public function tryParseTime($input)
+    public function tryParseTimeNode($input): ?Time
     {
         try {
             return $this->parser->parseTime($input);
@@ -466,15 +443,27 @@ class Controller
      */
     private function editTimeNode(mixed $time, Node $node, mixed $insertBreak): void
     {
-        $time =
-            $time ? $this->io->parseTime($time, $node->time) :
-                $this->io->promptTime('Edit '.$node->time, $node->time);
+        $dateTime = $time
+            ? $this->io->parseTime($time, $node->parent->date. ' '. $node->time)
+            : $this->io->promptTime('Edit '.$node->time, $node->parent->date. ' '. $node->time);
 
+        $day = $this->today($dateTime);
+
+        $time = $dateTime->format('H:i');
         if ($insertBreak) {
-            $node->insertSibling(new Time($time));
+            $node->insertSibling($newTime = new Time($time));
             $node->insertSibling(new EmptyLine());
+
+            foreach ($node->children as $child) {
+                $newTime->addChild($child);
+            }
+            $node->children = [];
         } else {
             $node->time = $time;
+            if ($node->parent->date !== $day->date) {
+                $node->delete();
+                $this->appendNode($day, $node, false);
+            }
         }
         $this->io->info("Set time to $time");
 

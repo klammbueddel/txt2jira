@@ -33,6 +33,7 @@ final class ParserTest extends TestCase
 TEST-10 Review
 08:15
 TEST-10 Review
+foo x
 08:30
 
 
@@ -45,10 +46,12 @@ TEXT
                 ->addChild(
                     (new Day('11.10.2022'))
                         ->addChild(new EmptyLine())
-                        ->addChild(new Time('08:00'))
-                        ->addChild(new Issue('TEST-10 Review', false))
-                        ->addChild(new Time('08:15'))
-                        ->addChild(new Issue('TEST-10 Review', false))
+                        ->addChild((new Time('08:00'))->addChild(new Issue('TEST-10 Review', false)))
+                        ->addChild(
+                            (new Time('08:15'))
+                                ->addChild(new Issue('TEST-10 Review', false))
+                                ->addChild(new Issue('foo', true))
+                        )
                         ->addChild(new Time('08:30'))
                         ->addChild(new EmptyLine())
                         ->addChild(new EmptyLine())
@@ -57,7 +60,7 @@ TEXT
         );
 
         $out = $root->__toString();
-        $this->assertEquals(str_replace("\r\n", "\n", $in . "\n"), $out);
+        $this->assertEquals(str_replace("\r\n", "\n", $in."\n"), $out);
     }
 
     /** @test */
@@ -83,10 +86,16 @@ TEXT
                 ->addChild(
                     (new Day('11.10.2022'))
                         ->addChild(new EmptyLine())
-                        ->addChild(new Time('08:00'))
-                        ->addChild(new Issue('TEST-10 Review', false))
-                        ->addChild((new Time('08:05'))->addChild((new Minutes(5))->addChild(new Issue('TEST-11 Do other stuff', false))))
-                        ->addChild((new Time('08:10'))->addChild((new Minutes(5))->addChild(new Pause(true))))
+                        ->addChild(
+                            (new Time('08:00'))
+                                ->addChild(new Issue('TEST-10 Review', false))
+                                ->addChild(
+                                    (new Time('08:05'))->addChild(
+                                        (new Minutes(5))->addChild(new Issue('TEST-11 Do other stuff', false))
+                                    )
+                                )
+                                ->addChild((new Time('08:10'))->addChild((new Minutes(5))->addChild(new Pause(true))))
+                        )
                         ->addChild(new Time('08:20'))
                         ->addChild(new EmptyLine())
                 ),
@@ -94,7 +103,7 @@ TEXT
         );
 
         $out = $root->__toString();
-        $this->assertEquals(str_replace("\r\n", "\n", $in . "\n"), $out);
+        $this->assertEquals(str_replace("\r\n", "\n", $in."\n"), $out);
     }
 
     /** @test */
@@ -118,7 +127,11 @@ TEXT
                 ->addChild(
                     (new Day('11.10.2022'))
                         ->addChild(new EmptyLine())
-                        ->addChild((new Time('08:05'))->addChild((new Minutes(5))->addChild(new Issue('TEST-11 Do other stuff', false))))
+                        ->addChild(
+                            (new Time('08:05'))->addChild(
+                                (new Minutes(5))->addChild(new Issue('TEST-11 Do other stuff', false))
+                            )
+                        )
                         ->addChild((new Time('08:15'))->addChild((new Minutes(10))->addChild(new Pause(false))))
                         ->addChild(new EmptyLine())
                         ->addChild(new EmptyLine())
@@ -127,7 +140,7 @@ TEXT
         );
 
         $out = $root->__toString();
-        $this->assertEquals(str_replace("\r\n", "\n", $in . "\n"), $out);
+        $this->assertEquals(str_replace("\r\n", "\n", $in."\n"), $out);
     }
 
 }

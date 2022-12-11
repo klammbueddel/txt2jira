@@ -274,7 +274,7 @@ TEXT
         $this->assertEquals('2022-11-26 00:20', $logs[$idx]->end->format('Y-m-d H:i'));
         $this->assertTrue($logs[$idx]->transient);
 
-        $this->controller->stop('+5');
+        $this->controller->stop(null, -5);
 
         $this->assertEquals(
             <<<TEXT
@@ -380,6 +380,41 @@ TEXT,
     }
 
     /** @test */
+    public function should_delete_issue_with_mulit_line(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+
+10:00
+TEST-2
+some more comments
+
+TEXT,
+        );
+
+        $this->controller->delete();
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+09:00
+TEST-1
+09:30
+
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
     public function should_edit_start_time_of_current_issue(): void
     {
         $this->controller->parse(
@@ -410,6 +445,8 @@ TEXT,
     /** @test */
     public function should_edit_start_time_of_current_issue_without_changing_end_time_of_last_one(): void
     {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
         $this->controller->parse(
             <<<TEXT
 25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -451,7 +488,7 @@ TEST-2
 10:00
 TEXT,
         );
-        $this->controller->editTime('+5', false, true);
+        $this->controller->editTime('5m', false, true);
 
         $this->assertEquals(
             <<<TEXT
@@ -481,7 +518,7 @@ TEST-2
 10:00
 TEXT,
         );
-        $this->controller->editTime('+5', true, true);
+        $this->controller->editTime('5m', true, true);
 
         $this->assertEquals(
             <<<TEXT
@@ -511,7 +548,7 @@ TEST-1
 09:25
 TEXT,
         );
-        $this->controller->editTime('+5');
+        $this->controller->editTime('5m');
 
         $this->assertEquals(
             <<<TEXT
@@ -536,10 +573,13 @@ TEXT,
 
 23:00
 TEST-1
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 00:25
 TEXT,
         );
-        $this->controller->editTime('-30');
+        $this->controller->editTime('-30m');
 
         $this->assertEquals(
             <<<TEXT
@@ -548,6 +588,9 @@ TEXT,
 23:00
 TEST-1
 23:55
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 TEXT,
             $this->controller->render()
         );
@@ -567,7 +610,7 @@ TEST-1
 23:55
 TEXT,
         );
-        $this->controller->editTime('+30');
+        $this->controller->editTime('30m');
 
         $this->assertEquals(
             <<<TEXT
@@ -575,7 +618,115 @@ TEXT,
 
 23:00
 TEST-1
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 00:25
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_move_to_last_day(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-26 00:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:30
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+00:20
+TEST-1
+TEXT,
+        );
+        $this->controller->editTime('-30m', false);
+//TODO: ONE LINEBREAK IS MISSING
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:30
+23:50
+TEST-1
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_move_to_next_day(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-26 00:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:30
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+00:20
+TEST-1
+TEXT,
+        );
+        $this->controller->editTime('1d 30m', false);
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+23:00
+TEST-1
+23:30
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+27.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+00:50
+TEST-1
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_move_start(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-26 02:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+TEXT,
+        );
+        $this->controller->start('TEST-1', 'foo', null, 240);
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+22:25
+TEST-1 foo
+
+26.11.2022 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+02:25
 TEXT,
             $this->controller->render()
         );

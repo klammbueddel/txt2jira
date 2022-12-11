@@ -16,10 +16,9 @@ class TimeCommand extends AbstractCommand
     {
         parent::__construct('time');
         $formats = [
-            '<hour>:<minute>' => 'set time',
-            '<minute>       ' => 'set minutes in current hour',
-            '+<minutes>     ' => 'add minutes',
-            '_<minutes>     ' => 'subtract minutes',
+            '<hour>:<minute> ' => 'set time',
+            '+<jira interval>' => 'move forward',
+            '_<jira interval>' => 'move backward',
         ];
         $this->setDescription('Edit time (start/stop) of current log');
         $this->setHelp(
@@ -28,14 +27,14 @@ class TimeCommand extends AbstractCommand
                 array_map(fn($format, $description) => "  $format - $description", array_keys($formats), $formats)
             )
         );
-        $this->addArgument('time', InputArgument::OPTIONAL, 'Time');
+        $this->addArgument('time', InputArgument::IS_ARRAY, 'Time');
         $this->addOption('break', 'b', InputOption::VALUE_NEGATABLE, 'Detach from last start time which might add a break');
         $this->addOption('start', 's', InputOption::VALUE_NEGATABLE, 'Edit start time');
     }
 
     public function exec(Controller $controller, InputInterface $input, OutputInterface $output): int
     {
-        $time = $input->getArgument('time');
+        $time = implode(' ', $input->getArgument('time'));
         $break = $input->getOption('break');
         $start = $input->getOption('start');
 

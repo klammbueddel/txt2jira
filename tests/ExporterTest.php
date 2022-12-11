@@ -258,8 +258,10 @@ TEXT
         $this->assertCount(2, $logs);
         $this->assertEquals('08:00', $logs[0]->start->format('H:i'));
         $this->assertEquals('08:45', $logs[0]->end->format('H:i'));
-        $this->assertEquals('08:30', $logs[1]->start->format('H:i'));
-        $this->assertEquals('08:35', $logs[1]->end->format('H:i'));
+        $this->assertEquals('08:45', $logs[1]->start->format('H:i'));
+        $this->assertNull($logs[1]->end);
+        $this->assertEquals('08:30', $logs[1]->children[0]->start->format('H:i'));
+        $this->assertEquals('08:35', $logs[1]->children[0]->end->format('H:i'));
 
         $chargeableItems = $this->exporter->aggregateUncommitedLogs($logs);
 

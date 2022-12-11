@@ -11,6 +11,7 @@ use App\Model\Minutes;
 use App\Model\Node;
 use App\Model\Pause;
 use App\Model\Time;
+use DateTime;
 use Exception;
 use Jfcherng\Diff\DiffHelper;
 use function PHPUnit\Framework\stringEndsWith;
@@ -71,16 +72,28 @@ class Parser
 
     public function parseTime(string $line, $lineNumber = 0): ?Time
     {
-        # matches time and pause
-        if (preg_match('/^([0-9]{1,2}:[0-9]{2})(.*)$/', $line, $matches)) {
-            $time = new Time($matches[1]);
-            if ($minutes = $this->parseMinutes(trim($matches[2]))) {
-                $time->addChild($minutes);
-            } else if (trim($matches[2])) {
-                throw new SyntaxError('Unexpected sequence ' . trim($matches[2]) . " at line $lineNumber");
+        $result = null;
+        if (!$result && preg_match('/^(\d+):(\d+)(.*)$/', $line, $matches)) {
+            $result = (new DateTime())->setTime($matches[1], $matches[2]);
+        }
+        if (!$result && preg_match('/^(\d{2})(\d{2})(.*)$/', $line, $matches)) {
+            $result = (new DateTime())->setTime($matches[1], $matches[2]);
+        }
+
+        if ($result) {
+            $time = new Time($result->format('H:i'));
+
+            if ($rest = trim($matches[3])) {
+                if ($minutes = $this->parseMinutes($rest)) {
+                    $time->addChild($minutes);
+                } else {
+                    throw new SyntaxError('Unexpected sequence '.trim($rest)." at line $lineNumber");
+                }
             }
+
             return $time;
         }
+
         return null;
     }
 
@@ -94,6 +107,7 @@ class Parser
 
         $root = new Node();
         $day = null;
+        $time = null;
 
         foreach ($lines as $idx => $line) {
             $line = trim($line);
@@ -114,19 +128,24 @@ class Parser
                 continue;
             }
 
-            if ($time = $this->parseTime($line, $idx)) {
+            if ($newTime = $this->parseTime($line, $idx)) {
                 if (!$day) {
                     throw new SyntaxError("No day for time in line $idx");
                 }
-                $day->addChild($time);
+                if ($newTime->children) {
+                    ($time ?: $day)->addChild($newTime);
+                } else {
+                    $time = $newTime;
+                    $day->addChild($time);
+                }
                 continue;
             }
 
-            if (! $day) {
+            if (!$day) {
                 throw new SyntaxError("No day at line $idx");
             }
 
-            $day->addChild($this->parseIssue($line));
+            ($time ?: $day)->addChild($this->parseIssue($line));
 
         }
 

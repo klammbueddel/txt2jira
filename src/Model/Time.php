@@ -9,6 +9,10 @@ class Time extends Node
 
     public function __toString(): string
     {
-        return trim("$this->time ".parent::__toString())."\n";
+        if ($this->children && $this->children[0] instanceof Minutes) {
+            return trim("$this->time ".parent::__toString())."\n";
+        } else {
+            return trim("$this->time\n".parent::__toString())."\n";
+        }
     }
 }
