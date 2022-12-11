@@ -1,9 +1,31 @@
-# txt2jira - text to Jira work log – work logging made easy and fun again
+# txt2jira - text to Jira - time tracking for the command line
 
 ![CI](https://github.com/klammbueddel/txt2jira/actions/workflows/test.yml/badge.svg)
 
 Log your work in a simple text file and post it to Jira with a single command. 
 Edit the file manually or use the provided commands to interact with the log file.
+
+## Key benefits
+* Logs your work locally, commits accumulated logs to Jira once you are done.
+* Provides autocompletion for recently used issues and comments.
+* Resolves summary of issues from Jira.
+* Shows a summary of the logged time per day.
+* Rounds time to frames of 5 minutes by default.
+* Detects issue number in branch name or URL.
+* Supports absolute (hh:mm) or relative time formats (1h / 30m).
+* Supports alias to quickly log work on a specific issue.
+
+## Log format
+
+```text
+<issue> as <alias>
+
+<date>
+
+<start time>
+<issue | alias> <comment>
+<end time>
+```
 
 ## Getting started
 
@@ -72,8 +94,8 @@ TEST-2 Do some other work
 ```
 
 ### Explore other useful features
-* Use the `log` command without arguments to select from the last recent tasks.
-* Use the `log` command with `<issue>` or `<issue> <comments>` arguments to log or switch to task.
+* Use the `log` command without arguments to choose from the last recent tasks.
+* Use the `log` command with `<issue>` or `<issue> <comments>` arguments to switch to task.
 * Type `log 10m TEST-1` to add a task with a duration of 10 minutes.  
 * Type `log 10:00 15m TEST-1` to add a task from 10:00 to 10:15.  
 * Type `log -c` to continue from last end date. 
@@ -129,9 +151,9 @@ alias w='txt2jira'
 alias ws='txt2jira log'
 alias wl='txt2jira list'
 alias wd='txt2jira delete'
-alias wc='txt2jira comment'
-alias we='txt2jira edit'
+alias wt='txt2jira time'
 alias wi='txt2jira issue'
+alias wc='txt2jira comment'
 ```
 
 ## Other features
