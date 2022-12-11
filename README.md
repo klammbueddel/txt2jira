@@ -10,7 +10,7 @@ Edit the file manually or use the provided commands to interact with the log fil
 Start your work day with the `log` command. It will add the current time to the log file rounded to 5 minute.
 
 ```bash
-09:02 $ ./txt2jira log TEST-1 Do some work
+09:02 $ txt2jira log TEST-1 Do some work
 Started TEST-1 Do some work at 09:00
 ```
 
@@ -26,7 +26,7 @@ TEST-1 Do some work
 Use the `list` command to see all entries in the log file. Notice that the summary was fetched from Jira.
 
 ```bash
-09:02 $ ./txt2jira list
+09:02 $ txt2jira list
 -------------------------------------------------- 04.12.22 -----------------------------------
 * 09:00 - 09:02  TEST-1     As a user I want to eat choco cup cakes     2m      Do some work
 ----------------------------------------------------- 5m --------------------------------------
@@ -37,7 +37,7 @@ Use the `list` command to see all entries in the log file. Notice that the summa
 It is easy to switch to another task by just starting it.
 
 ```bash
-09:19 $ ./txt2jira log TEST-2 Do some other work
+09:19 $ txt2jira log TEST-2 Do some other work
 Stopped TEST-1 Do some work at 09:20
 Started TEST-2 Do some other work at 09:20
 ```
@@ -56,7 +56,7 @@ TEST-2 Do some other work
 Running the `log` command while a log is active will stop the current log. Add optional `<time>` or `<duration>` for alternative end time.
 
 ```bash
-09:29 $ ./txt2jira log`
+09:29 $ txt2jira log
 Stopped TEST-1 Do some work at 09:30
 ```
 
@@ -89,7 +89,7 @@ TEST-2 Do some other work
 Once you are done with your work day, you can commit the logs to Jira with the `commit` command.
 
 ```bash
-09:41 $ ./txt2jira commit
+09:41 $ txt2jira commit
 -------------------------------------------------- 04.12.22 -----------------------------------------------------
 * 09:00 - 09:20  TEST-1     As a user I want to eat choco cup cakes              20m     Do some work
 * 09:20 - 09:30  TEST-2     As an administrator I want to grant access to c...   10m     Do some other work
