@@ -67,7 +67,7 @@ final class ImporterTest extends TestCase
         $this->client->expects($this->once())
             ->method('getIssues')
             ->with(['TEST-1'])
-            ->willThrowException(new HttpException('{"errorMessages":["Issue does not exist or you do not have permission to see it."],"warningMessages":[]}'));
+            ->willThrowException(new HttpException('{"errorMessages":["Issue does not exist or you do not have permission to see it."],"warningMessages":[]}', 400));
 
         $this->assertEquals('ERROR: Issue does not exist or you do not have permission to see it.', $this->createImporter()->getSummary('TEST-1'));
 

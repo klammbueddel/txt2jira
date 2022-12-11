@@ -41,7 +41,7 @@ class Importer
                 return $this->update($keys);
             }
 
-            if (count($keys) === 1) {
+            if (count($keys) === 1 && $ex->getCode() === 400) {
                 $this->cache[$keys[0]] = $error;
                 $this->saveCache();
                 return;
