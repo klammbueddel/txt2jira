@@ -13,15 +13,15 @@ class JiraDateInterval extends DateInterval
         $minutes = 0;
         $tokens = explode(' ', $input);
         foreach($tokens as $token) {
-            if (preg_match('/^([0-9\.]+)m$/', $token, $matches)) {
+            if (preg_match('/^\+?([0-9\.]+)m$/', $token, $matches)) {
                 $minutes += $matches[1];
             }
 
-            if (preg_match('/^([0-9\.]+)h$/', $token, $matches)) {
+            if (preg_match('/^\+?([0-9\.]+)h$/', $token, $matches)) {
                 $minutes += $matches[1] * 60;
             }
 
-            if (preg_match('/^([0-9\.]+)d$/', $token, $matches)) {
+            if (preg_match('/^\+?([0-9\.]+)d$/', $token, $matches)) {
                 $minutes += $matches[1] * 60 * 24;
             }
         }
