@@ -70,6 +70,7 @@ class Controller
     {
         $this->_root = $this->parser->parse($content);
         $this->interpreter->getLogs($this->_root);
+
         return $this->_root;
     }
 
@@ -212,12 +213,19 @@ class Controller
             return;
         }
 
+        if ($lastNode instanceof Issue
+            && $lastNode->parent instanceof Time
+            && count($lastNode->parent->children) === 1
+            && $lastNode->parent->getSibling(-1) instanceof EmptyLine) {
+            $lastNode = $lastNode->parent;
+        }
+
         if (($emptyLine = $lastNode->getSibling(-1)) instanceof EmptyLine) {
             $emptyLine->delete();
         }
         $lastNode->delete();
 
-        $this->io->info('Deleted '. trim($lastNode));
+        $this->io->info('Deleted '.trim($lastNode));
         $this->save();
     }
 
@@ -248,7 +256,7 @@ class Controller
             return $this->editStartTime($time, $insertBreak);
         }
 
-        if (! $lastTime->children) {
+        if (!$lastTime->children) {
             $insertBreak = false;
         }
 
@@ -444,8 +452,8 @@ class Controller
     private function editTimeNode(mixed $time, Node $node, mixed $insertBreak): void
     {
         $dateTime = $time
-            ? $this->io->parseTime($time, $node->parent->date. ' '. $node->time)
-            : $this->io->promptTime('Edit '.$node->time, $node->parent->date. ' '. $node->time);
+            ? $this->io->parseTime($time, $node->parent->date.' '.$node->time)
+            : $this->io->promptTime('Edit '.$node->time, $node->parent->date.' '.$node->time);
 
         $day = $this->today($dateTime);
 

@@ -380,6 +380,59 @@ TEXT,
     }
 
     /** @test */
+    public function should_not_delete_last_end_time(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022
+
+09:00
+TEST-1
+09:30
+TEST-2
+TEXT,
+        );
+
+        $this->controller->delete();
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022
+
+09:00
+TEST-1
+09:30
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
+    public function should_delete_time_and_line_break(): void
+    {
+        ClockMock::freeze(new DateTime('2022-11-25 10:25'));
+
+        $this->controller->parse(
+            <<<TEXT
+25.11.2022
+
+09:00
+TEXT,
+        );
+
+        $this->controller->delete();
+
+        $this->assertEquals(
+            <<<TEXT
+25.11.2022
+TEXT,
+            $this->controller->render()
+        );
+    }
+
+    /** @test */
     public function should_delete_issue_with_mulit_line(): void
     {
         ClockMock::freeze(new DateTime('2022-11-25 10:25'));
@@ -408,6 +461,9 @@ TEXT,
 09:00
 TEST-1
 09:30
+
+10:00
+TEST-2
 
 TEXT,
             $this->controller->render()

@@ -74,6 +74,14 @@ class Node
         $children = $reverse ? array_reverse($this->children) : $this->children;
 
         foreach ($children as $child) {
+
+            if ($reverse && $deep) {
+                $result = $child->getOneByCriteria($criteria, $deep, $reverse, $offset);
+                if ($result) {
+                    return $result;
+                }
+            }
+
             if ($criteria($child)) {
                 if ($offset > 0) {
                     echo "SKIP " . $child;
