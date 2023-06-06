@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2023-06-06
+### Changed
+- Delete only last node 
+- Remove +++ from date 
+- Update description of arguments 
+### Added
+- Allow to add time with + 
+- Document key benefits 
+### Fixed
+- Hide complete response on authorization error 
+- Cache only HTTP 400 errors 
+- Change current comment if task is running 
+- Fix typo in doc 
+
 ## [2.1.0] - 2022-12-11
 ### Changed
 - The `start` command was renamed to `log` command. The `stop` command was removed.
