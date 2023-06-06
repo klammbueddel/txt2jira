@@ -127,7 +127,7 @@ All done!
 
 ### Requirements:
 
-* PHP 8.1
+* PHP 8.1 or higher
 * CURL
 
 ### Installation

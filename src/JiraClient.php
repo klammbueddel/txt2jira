@@ -12,7 +12,7 @@ class JiraClient
 
     private function prepare($url)
     {
-        $ch = curl_init();
+        $ch = \curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://'.$this->config->host.$url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
@@ -33,8 +33,8 @@ class JiraClient
      */
     private function request($ch)
     {
-        $response = curl_exec($ch);
-        $info = curl_getinfo($ch);
+        $response = \curl_exec($ch);
+        $info = \curl_getinfo($ch);
 
         if (!$info['http_code']) {
             throw new Exception(curl_error($ch));
