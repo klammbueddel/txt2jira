@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Composer\Util\Platform;
 use RuntimeException;
 
 class Config
@@ -34,7 +35,7 @@ class Config
     }
 
     public function resolve($path) {
-        return str_replace('~', getenv("HOME"), $path);
+        return str_replace('~', Platform::getUserDirectory(), $path);
     }
 
     public function save($path = null): void

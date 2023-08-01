@@ -9,7 +9,8 @@
   ],
   "require": {
     "phpunit/phpunit": "^9.5",
-    "symfony/console": "^6.1"
+    "symfony/console": "^6.1",
+    "composer/composer": "^2.5"
   },
   "autoload": {
     "psr-4": {
