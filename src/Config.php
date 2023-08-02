@@ -65,9 +65,9 @@ class Config
 
         $config = json_decode(file_get_contents($path), true);
 
-        $this->host = $config['host'] ?? null;
-        $this->user = $config['user'] ?? null;
-        $this->token = $config['token'] ?? null;
+        $this->host = $config['host'] ?? '';
+        $this->user = $config['user'] ?? '';
+        $this->token = $config['token'] ?? '';
         $this->file = $config['file'] ?? $this->file;
         $this->roundMinutes = $config['roundMinutes'] ?? $this->roundMinutes;
         $this->dateRegex = $config['dateRegex'] ?? $this->dateRegex;
