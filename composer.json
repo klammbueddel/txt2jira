@@ -1,5 +1,6 @@
 {
   "name": "klammbueddel/txt2jira",
+  "version": "2.1.2",
   "description": "txt2jira - text to Jira work log – work logging made easy and fun again",
   "license": "MIT",
   "authors": [
