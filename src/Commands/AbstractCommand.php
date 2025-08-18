@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class AbstractCommand extends Command
 {
 
-    public function __construct(string $name = null)
+    public function __construct(?string $name = null)
     {
         parent::__construct($name);
         $this->addOption('file', 'f', InputOption::VALUE_OPTIONAL, 'Config file');

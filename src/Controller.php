@@ -382,7 +382,7 @@ class Controller
         }
     }
 
-    public function today(DateTime $dateTime = null): Day
+    public function today(?DateTime $dateTime = null): Day
     {
         $today = $this->getRoot()->getOneByCriteria(function (Node $node) use ($dateTime) {
             return $node instanceof Day && $node->date === ($this->roundTime($dateTime ?: new DateTime()))->format(
