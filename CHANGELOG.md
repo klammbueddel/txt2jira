@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] - 2025-08-18
+### Fixed
+- Use search based Jira API
+- Use platform specific user directory
+- Fix fatal error when config is empty
+- Fix deprecation warnings with PHP 8.4
+
 ## [2.1.1] - 2023-06-06
 ### Changed
 - Delete only last node 
