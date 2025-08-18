@@ -1,13 +1,28 @@
----
-version: '3'
-
 services:
 
   app:
+    image: txt2jira:latest
+    container_name: txt2jira
+    hostname: txt2jira
     build:
       context: .
-      dockerfile: ./.docker/Dockerfile
+      dockerfile: ./docker/Dockerfile
+      target: prod
+      tags:
+        - "txt2jira:latest"
+      # Build arguments to customize the container (adjust as needed)
       args:
-        - WITH_XDEBUG=true
-    volumes:
-      - .:/home
+        - _uid_gid=1000       # User and group ID for the 'jira' user inside the container
+        - _editor=vi          # Text editor to install in the container (e.g., vi, nano, vim)
+        - _tz=${TZ:-UTC}      # Timezone setting (uses 'TZ' env variable or defaults to 'UTC')
+        - _shell=ash          # Shell to use inside the container (e.g., ash, bash, fish)
+    # Set the default command to the shell specified in '_shell'
+    # If you change '_shell' above, update 'command' to match
+    command: ash
+    # Optional: Mount the current directory into the container (recommended)
+    # Comment the 'volumes' section to disable
+    # volumes:
+    #  - ./:/home/jira
+    # Keep the container interactive (allocates a TTY and keeps STDIN open)
+    stdin_open: true          # Keeps STDIN open even if not attached
+    tty: true                 # Allocates a pseudo-TTY for the container

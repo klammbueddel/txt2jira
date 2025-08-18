@@ -1,3 +1,8 @@
 vendor
 .phpunit.result.cache
 tests/txt2jira.log
+.txt2jira*
+.ash_history
+.local
+.composer
+archive

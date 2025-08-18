@@ -131,7 +131,7 @@ All done!
 * CURL
 
 ### Installation
-
+#### Native Installation 
 ```bash
 git clone https://github.com/klammbueddel/txt2jira
 cd txt2jira
@@ -154,7 +154,127 @@ alias wd='txt2jira delete'
 alias wt='txt2jira time'
 alias wi='txt2jira issue'
 alias wc='txt2jira comment'
+alias e='exit'
 ```
+
+### Docker Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/klammbueddel/txt2jira.git
+cd txt2jira
+```
+
+#### Configuration
+
+Customize the application by adjusting build arguments in the `docker-compose.yml` file:
+
+- **`_shell`**: Shell to use inside the container (default: `ash`)
+- **`_editor`**: Text editor to install (default: `vi`)
+- **`_tz`**: Timezone for the container (default: `UTC`)
+
+Example `docker-compose.yml` build args:
+
+```yaml
+build:
+  context: .
+  dockerfile: ./docker/Dockerfile
+  target: prod
+  args:
+    - _shell=fish
+    - _editor=nano
+    - _tz=Europe/Berlin
+command: fish
+```
+
+Get the vendor folder to be able to mount this directory as a volume into the jira container and   
+uncomment volumes in the `docker-compose.yml`.
+
+```bash
+# Run this inside the cloned repository
+docker compose run --build --rm -v "$(pwd):/jira" app "sed -i '24s/  #/ /; 25s/  #/ /' /jira/docker-compose.yml && cp -vR vendor /jira"
+```
+
+#### Running the Application
+
+Build and run the application using Docker Compose:
+
+```bash
+docker compose run --rm -ti --build app
+```
+
+This command:
+
+- Builds the Docker image with your specified settings.
+- Runs the container interactively.
+
+#### Alias Suggestions
+
+To simplify commands, create aliases:
+
+**For Bash and Zsh:**
+
+```bash
+alias wb='docker compose build'
+alias w='docker compose run --rm -ti app'
+```
+
+**For Fish Shell:**
+
+```bash
+alias wb 'docker compose build'
+alias w 'docker compose run --rm -ti app'
+```
+
+Now you can:
+
+- Build the container with `wb`.
+- Run the container with `w`.
+
+#### Running from Any Directory
+
+To run these commands from any directory without specifying the path to `docker-compose.yml`, set the `COMPOSE_FILE` environment variable.  
+
+**For Bash and Zsh:**
+
+```bash
+# Adjust this path to your clone dir
+export COMPOSE_FILE="$(pwd)/docker-compose.yml"
+```
+
+**For Fish Shell:**
+
+```bash
+# Adjust this path to your clone dir
+set -x COMPOSE_FILE "$(pwd)/docker-compose.yml"
+```
+
+This points Docker Compose to your `docker-compose.yml` file, allowing you to use the aliases from any location.
+
+#### Using the Application
+
+With the aliases and configurations set, you can:
+
+- **Build the container:**
+
+  ```bash
+  wb
+  ```
+
+- **Run the container:**
+
+  ```bash
+  w
+  ```
+
+  This starts the container with your specified shell and settings, without needing to provide the shell or directory each time.
+
+#### Notes
+
+- **Shell and Editor Options:** Common shells include `ash`, `bash`, `fish`, and `zsh`. Editors include `vi`, `nano`, and `vim`.
+- **Timezone Configuration:** Use valid [timezone identifiers](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) for the `_tz` argument.
+- **Persistent Aliases:** Add the aliases to your shell's configuration file (`~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`) to make them persistent.
 
 ## Other features
 
