@@ -113,15 +113,23 @@ class JiraClient
      * @return bool|string
      * @throws HttpException
      */
-    public function getByJql($jql, array $fields = [], $offset = 0, $limit = 1000)
+    public function getByJql($jql, array $fields = [], $nextPageToken = null, $limit = 1000)
     {
-        $url = '/rest/api/2/search'
-            .'?fields='.implode(',', $fields)
-            .'&jql='.urlencode($jql)
-            .'&maxResults='.$limit
-            .'&startAt='.$offset;
+        $url = '/rest/api/3/search/jql';
 
-        return $this->get($url);
+        $body = ['jql' => $jql];
+
+        if (!empty($fields)) {
+            $body['fields'] = $fields;
+        }
+
+        if ($nextPageToken !== null) {
+            $body['nextPageToken'] = $nextPageToken;
+        } else {
+            $body['maxResults'] = $limit;
+        }
+
+        return $this->post($url, $body);
     }
 
     public function getCurrentUser()
