@@ -16,7 +16,7 @@ class Exporter
     ) {
     }
 
-    public function export(Interactor $io, $items, callable $onChange = null)
+    public function export(Interactor $io, $items, callable $onChange)
     {
         foreach ($items as $item) {
             $io->write('Log '.JiraDateInterval::formatMinutes($item['minutes']).' '.$item['issue'].' '.$item['comment']);
